@@ -1,0 +1,20 @@
+{
+  "name": "ywisax/com.tourze.stat",
+  "authors": [
+    {
+      "name": "ywisax",
+      "email": "25803471@qq.com"
+    }
+  ],
+  "minimum-stability": "stable",
+  "require": {
+    "workerman/workerman": "^3.1"
+  },
+  "repositories": [
+    {
+      "type": "composer",
+      "url": "http://php.composer.org/repo/packagist/"
+    },
+    {"packagist": false}
+  ]
+}
