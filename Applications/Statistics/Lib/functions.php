@@ -6,27 +6,29 @@
  * For full copyright and license information, please see the MIT-LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @author walkor<walkor@workerman.net>
+ * @author    walkor<walkor@workerman.net>
  * @copyright walkor<walkor@workerman.net>
- * @link http://www.workerman.net/
- * @license http://www.opensource.org/licenses/mit-license.php MIT License
+ * @link      http://www.workerman.net/
+ * @license   http://www.opensource.org/licenses/mit-license.php MIT License
  */
 use Workerman\Protocols\Http;
+
 /**
  * 批量请求
+ *
  * @param array $request_buffer_array ['ip:port'=>req_buf, 'ip:port'=>req_buf, ...]
  * @return multitype:unknown string
  */
 function multiRequest($request_buffer_array)
 {
-    \Statistics\Lib\Cache::$lastSuccessIpArray = array();
-    $client_array = $sock_to_ip = $ip_list = array();
-    foreach($request_buffer_array as $address => $buffer)
+    \Statistics\Lib\Cache::$lastSuccessIpArray = [];
+    $client_array = $sock_to_ip = $ip_list = [];
+    foreach ($request_buffer_array as $address => $buffer)
     {
         list($ip, $port) = explode(':', $address);
         $ip_list[$ip] = $ip;
         $client = stream_socket_client("tcp://$address", $errno, $errmsg, 1);
-        if(!$client)
+        if ( ! $client)
         {
             continue;
         }
@@ -34,30 +36,30 @@ function multiRequest($request_buffer_array)
         stream_set_timeout($client_array[$address], 0, 100000);
         fwrite($client_array[$address], $buffer);
         stream_set_blocking($client_array[$address], 0);
-        $sock_to_address[(int)$client] = $address;
+        $sock_to_address[(int) $client] = $address;
     }
     $read = $client_array;
-    $write = $except = $read_buffer = array();
+    $write = $except = $read_buffer = [];
     $time_start = microtime(true);
     $timeout = 0.99;
     // 轮询处理数据
-    while(count($read) > 0)
+    while (count($read) > 0)
     {
-        if(@stream_select($read, $write, $except, 0, 200000))
+        if (@stream_select($read, $write, $except, 0, 200000))
         {
-            foreach($read as $socket)
+            foreach ($read as $socket)
             {
-                $address = $sock_to_address[(int)$socket];
+                $address = $sock_to_address[(int) $socket];
                 $buf = fread($socket, 8192);
-                if(!$buf)
+                if ( ! $buf)
                 {
-                    if(feof($socket))
+                    if (feof($socket))
                     {
                         unset($client_array[$address]);
                     }
                     continue;
                 }
-                if(!isset($read_buffer[$address]))
+                if ( ! isset($read_buffer[$address]))
                 {
                     $read_buffer[$address] = $buf;
                 }
@@ -66,27 +68,27 @@ function multiRequest($request_buffer_array)
                     $read_buffer[$address] .= $buf;
                 }
                 // 数据接收完毕
-                if(($len = strlen($read_buffer[$address])) && $read_buffer[$address][$len-1] === "\n")
+                if (($len = strlen($read_buffer[$address])) && $read_buffer[$address][$len - 1] === "\n")
                 {
                     unset($client_array[$address]);
                 }
             }
         }
         // 超时了
-        if(microtime(true) - $time_start > $timeout)
+        if (microtime(true) - $time_start > $timeout)
         {
             break;
         }
         $read = $client_array;
     }
 
-    foreach($read_buffer as $address => $buf)
+    foreach ($read_buffer as $address => $buf)
     {
         list($ip, $port) = explode(':', $address);
         \Statistics\Lib\Cache::$lastSuccessIpArray[$ip] = $ip;
     }
 
-     \Statistics\Lib\Cache::$lastFailedIpArray = array_diff($ip_list,  \Statistics\Lib\Cache::$lastSuccessIpArray);
+    \Statistics\Lib\Cache::$lastFailedIpArray = array_diff($ip_list, \Statistics\Lib\Cache::$lastSuccessIpArray);
 
     ksort($read_buffer);
 
@@ -99,27 +101,27 @@ function multiRequest($request_buffer_array)
 function check_auth()
 {
     // 如果配置中管理员用户名密码为空则说明不用验证
-    if(Statistics\Config::$adminName == '' && Statistics\Config::$adminPassword == '')
+    if (Statistics\Config::$adminName == '' && Statistics\Config::$adminPassword == '')
     {
         return true;
     }
     // 进入验证流程
     _session_start();
-    if(!isset($_SESSION['admin']))
+    if ( ! isset($_SESSION['admin']))
     {
-        if(!isset($_POST['admin_name']) || !isset($_POST['admin_password']))
+        if ( ! isset($_POST['admin_name']) || ! isset($_POST['admin_password']))
         {
-            include ST_ROOT . '/Views/login.tpl.php';
+            include ROOT_PATH . 'view/login.tpl.php';
             _exit();
         }
-        else 
+        else
         {
             $admin_name = $_POST['admin_name'];
             $admin_password = $_POST['admin_password'];
-            if($admin_name != Statistics\Config::$adminName || $admin_password != Statistics\Config::$adminPassword)
+            if ($admin_name != Statistics\Config::$adminName || $admin_password != Statistics\Config::$adminPassword)
             {
                 $msg = "用户名或者密码不正确";
-                include ST_ROOT . '/Views/login.tpl.php';
+                include ROOT_PATH . 'view/login.tpl.php';
                 _exit();
             }
             $_SESSION['admin'] = $admin_name;
@@ -133,7 +135,7 @@ function check_auth()
  */
 function _session_start()
 {
-    if(defined('WORKERMAN_ROOT_DIR'))
+    if (defined('WORKERMAN_ROOT_DIR'))
     {
         return Http::sessionStart();
     }
@@ -142,11 +144,12 @@ function _session_start()
 
 /**
  * 退出
+ *
  * @param string $str
  */
 function _exit($str = '')
 {
-    if(defined('WORKERMAN_ROOT_DIR'))
+    if (defined('WORKERMAN_ROOT_DIR'))
     {
         return Http::end($str);
     }
