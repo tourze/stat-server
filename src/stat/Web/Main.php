@@ -3,7 +3,7 @@
 namespace stat\Web;
 
 use stat\Base as StatBase;
-use Statistics\Lib\Cache;
+use stat\Cache;
 
 class Main extends Base
 {

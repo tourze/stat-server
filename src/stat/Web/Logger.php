@@ -2,13 +2,16 @@
 
 namespace stat\Web;
 
+use stat\Base;
+use stat\Cache;
+
 class Logger extends Base
 {
 
     public function run($module, $interface, $date, $start_time, $offset, $count)
     {
         $module_str = '';
-        foreach (\Statistics\Lib\Cache::$modulesDataCache as $mod => $interfaces)
+        foreach (Cache::$modulesDataCache as $mod => $interfaces)
         {
             if ($mod == 'WorkerMan')
             {
@@ -45,7 +48,7 @@ class Logger extends Base
 
     public function getStasticLog($module, $interface, $start_time, $offset = '', $count = 10)
     {
-        $ip_list = ( ! empty($_GET['ip']) && is_array($_GET['ip'])) ? $_GET['ip'] : \Statistics\Lib\Cache::$ServerIpList;
+        $ip_list = ( ! empty($_GET['ip']) && is_array($_GET['ip'])) ? $_GET['ip'] : Cache::$ServerIpList;
         $offset_list = ( ! empty($_GET['offset']) && is_array($_GET['offset'])) ? $_GET['offset'] : [];
         $port = \Statistics\Config::$ProviderPort;
         $request_buffer_array = [];
@@ -55,7 +58,7 @@ class Logger extends Base
             $request_buffer_array["$ip:$port"] = json_encode(['cmd' => 'get_log', 'module' => $module, 'interface' => $interface, 'start_time' => $start_time, 'offset' => $offset, 'count' => $count]) . "\n";
         }
 
-        $read_buffer_array = multiRequest($request_buffer_array);
+        $read_buffer_array = Base::multiRequest($request_buffer_array);
         ksort($read_buffer_array);
         foreach ($read_buffer_array as $address => $buf)
         {

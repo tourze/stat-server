@@ -28,3 +28,6 @@ Asset::$assetHost = 'http://local.asset.tourze.com/';
 
 Config::addPath(ROOT_PATH . 'config' . DIRECTORY_SEPARATOR);
 View::addPath(ROOT_PATH . 'view' . DIRECTORY_SEPARATOR);
+
+// 创建类别名
+class_alias('\stat\Service\Protocol\Statistic', '\Protocols\Statistic');

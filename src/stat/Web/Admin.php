@@ -2,6 +2,8 @@
 
 namespace stat\Web;
 
+use stat\Cache;
+
 class Admin extends Base
 {
     public function run()
@@ -15,14 +17,14 @@ class Admin extends Base
                 // 创建udp socket
                 $socket = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
                 socket_set_option($socket, SOL_SOCKET, SO_BROADCAST, 1);
-                $buffer = json_encode(array('cmd'=>'REPORT_IP'))."\n";
+                $buffer = json_encode(['cmd'=>'REPORT_IP'])."\n";
                 // 广播
                 socket_sendto($socket, $buffer, strlen($buffer), 0, '255.255.255.255', \Statistics\Config::$ProviderPort);
                 // 超时相关
                 $time_start = microtime(true);
                 $global_timeout = 1;
-                $ip_list = array();
-                $recv_timeout = array('sec'=>0,'usec'=>8000);
+                $ip_list = [];
+                $recv_timeout = ['sec'=>0,'usec'=>8000];
                 socket_set_option($socket,SOL_SOCKET,SO_RCVTIMEO,$recv_timeout);
 
                 // 循环读数据
@@ -39,7 +41,7 @@ class Admin extends Base
                 $count = 0;
                 foreach($ip_list as $ip)
                 {
-                    if(!isset(\Statistics\Lib\Cache::$ServerIpList[$ip]))
+                    if(!isset(Cache::$ServerIpList[$ip]))
                     {
                         $ip_list_str .= $ip."\r\n";
                         $count ++;
@@ -62,12 +64,12 @@ class Admin extends Base
                         $ip = trim($ip);
                         if(false !== ip2long($ip))
                         {
-                            \Statistics\Lib\Cache::$ServerIpList[$ip] = $ip;
+                            Cache::$ServerIpList[$ip] = $ip;
                         }
                     }
                 }
                 $suc_msg = "添加成功";
-                foreach(\Statistics\Lib\Cache::$ServerIpList as $ip)
+                foreach(Cache::$ServerIpList as $ip)
                 {
                     $ip_list_str .= $ip."\r\n";
                 }
@@ -79,7 +81,7 @@ class Admin extends Base
                     $err_msg = "保存的ip列表为空";
                     break;
                 }
-                \Statistics\Lib\Cache::$ServerIpList = array();
+                Cache::$ServerIpList = [];
                 $ip_list = explode("\n", $_POST['ip_list']);
                 if($ip_list)
                 {
@@ -88,19 +90,19 @@ class Admin extends Base
                         $ip = trim($ip);
                         if(false !== ip2long($ip))
                         {
-                            \Statistics\Lib\Cache::$ServerIpList[$ip] = $ip;
+                            Cache::$ServerIpList[$ip] = $ip;
                         }
                     }
                 }
                 $suc_msg = "保存成功";
-                foreach(\Statistics\Lib\Cache::$ServerIpList as $ip)
+                foreach(Cache::$ServerIpList as $ip)
                 {
                     $ip_list_str .= $ip."\r\n";
                 }
                 $this->saveServerIpListToCache();
                 break;
             default:
-                foreach(\Statistics\Lib\Cache::$ServerIpList as $ip)
+                foreach(Cache::$ServerIpList as $ip)
                 {
                     $ip_list_str .= $ip."\r\n";
                 }
@@ -118,7 +120,7 @@ class Admin extends Base
         {
             unlink($php_file);
         }
-        file_put_contents(ST_ROOT . '/Config/Cache/'.time().'.iplist.cache.php', "<?php\n\\Statistics\\Lib\\Cache::\$ServerIpList=".var_export(\Statistics\Lib\Cache::$ServerIpList,true).';');
+        file_put_contents(ST_ROOT . '/Config/Cache/'.time().'.iplist.cache.php', "<?php\n\\stat\\Cache::\$ServerIpList=".var_export(Cache::$ServerIpList,true).';');
     }
 
 }

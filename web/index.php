@@ -1,11 +1,12 @@
 <?php
 
+use stat\Web;
 use tourze\Base\Helper\Arr;
 
 require_once  __DIR__.'/_init.php';
 
 // 检查是否登录
-check_auth();
+Web::checkAuth();
 
 $class = '\stat\Web\\' . strtoupper(Arr::get($_GET, 'fn', 'main'));
 
@@ -15,7 +16,7 @@ $date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
 $start_time = isset($_GET['start_time']) ? $_GET['start_time'] : strtotime(date('Y-m-d'));
 $offset =  isset($_GET['offset']) ? $_GET['offset'] : 0; 
 $log_count_per_ip = $log_count_per_page = 40;
-if(empty($_GET['count']) && $ip_count = count(\Statistics\Lib\Cache::$ServerIpList))
+if(empty($_GET['count']) && $ip_count = count(\stat\Cache::$ServerIpList))
 {
     $log_count_per_ip = ceil($log_count_per_page/$ip_count); 
 }

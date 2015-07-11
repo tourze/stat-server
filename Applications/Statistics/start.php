@@ -13,7 +13,6 @@
  */
 
 require_once __DIR__ . '/Config/Config.php';
-require_once __DIR__ . '/Protocols/Statistic.php';
 require_once __DIR__ . '/Bootstrap/StatisticProvider.php';
 require_once __DIR__ . '/Bootstrap/StatisticWorker.php';
 

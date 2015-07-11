@@ -5,18 +5,100 @@ namespace stat;
 class Base
 {
 
+    /**
+     * 批量请求
+     *
+     * @param array $request_buffer_array ['ip:port'=>req_buf, 'ip:port'=>req_buf, ...]
+     * @return multitype:unknown string
+     */
+    public static function multiRequest($request_buffer_array)
+    {
+        Cache::$lastSuccessIpArray = [];
+        $client_array = $sock_to_ip = $ip_list = [];
+        foreach ($request_buffer_array as $address => $buffer)
+        {
+            list($ip, $port) = explode(':', $address);
+            $ip_list[$ip] = $ip;
+            $client = stream_socket_client("tcp://$address", $errno, $errmsg, 1);
+            if ( ! $client)
+            {
+                continue;
+            }
+            $client_array[$address] = $client;
+            stream_set_timeout($client_array[$address], 0, 100000);
+            fwrite($client_array[$address], $buffer);
+            stream_set_blocking($client_array[$address], 0);
+            $sock_to_address[(int) $client] = $address;
+        }
+        $read = $client_array;
+        $write = $except = $read_buffer = [];
+        $time_start = microtime(true);
+        $timeout = 0.99;
+        // 轮询处理数据
+        while (count($read) > 0)
+        {
+            if (@stream_select($read, $write, $except, 0, 200000))
+            {
+                foreach ($read as $socket)
+                {
+                    $address = $sock_to_address[(int) $socket];
+                    $buf = fread($socket, 8192);
+                    if ( ! $buf)
+                    {
+                        if (feof($socket))
+                        {
+                            unset($client_array[$address]);
+                        }
+                        continue;
+                    }
+                    if ( ! isset($read_buffer[$address]))
+                    {
+                        $read_buffer[$address] = $buf;
+                    }
+                    else
+                    {
+                        $read_buffer[$address] .= $buf;
+                    }
+                    // 数据接收完毕
+                    if (($len = strlen($read_buffer[$address])) && $read_buffer[$address][$len - 1] === "\n")
+                    {
+                        unset($client_array[$address]);
+                    }
+                }
+            }
+            // 超时了
+            if (microtime(true) - $time_start > $timeout)
+            {
+                break;
+            }
+            $read = $client_array;
+        }
+
+        foreach ($read_buffer as $address => $buf)
+        {
+            list($ip, $port) = explode(':', $address);
+            Cache::$lastSuccessIpArray[$ip] = $ip;
+        }
+
+        Cache::$lastFailedIpArray = array_diff($ip_list, Cache::$lastSuccessIpArray);
+
+        ksort($read_buffer);
+
+        return $read_buffer;
+    }
+
     public static function multiRequestStAndModules($module, $interface, $date)
     {
-        \Statistics\Lib\Cache::$statisticDataCache['statistic'] = '';
+        Cache::$statisticDataCache['statistic'] = '';
         $buffer = json_encode(['cmd' => 'get_statistic', 'module' => $module, 'interface' => $interface, 'date' => $date]) . "\n";
-        $ip_list = ( ! empty($_GET['ip']) && is_array($_GET['ip'])) ? $_GET['ip'] : \Statistics\Lib\Cache::$ServerIpList;
+        $ip_list = ( ! empty($_GET['ip']) && is_array($_GET['ip'])) ? $_GET['ip'] : Cache::$ServerIpList;
         $reqest_buffer_array = [];
         $port = \Statistics\Config::$ProviderPort;;
         foreach ($ip_list as $ip)
         {
             $reqest_buffer_array["$ip:$port"] = $buffer;
         }
-        $read_buffer_array = multiRequest($reqest_buffer_array);
+        $read_buffer_array = self::multiRequest($reqest_buffer_array);
         foreach ($read_buffer_array as $address => $buf)
         {
             list($ip, $port) = explode(':', $address);
@@ -26,16 +108,16 @@ class Base
             // 整理modules
             foreach ($modules_data as $mod => $interfaces)
             {
-                if ( ! isset(\Statistics\Lib\Cache::$modulesDataCache[$mod]))
+                if ( ! isset(Cache::$modulesDataCache[$mod]))
                 {
-                    \Statistics\Lib\Cache::$modulesDataCache[$mod] = [];
+                    Cache::$modulesDataCache[$mod] = [];
                 }
                 foreach ($interfaces as $if)
                 {
-                    \Statistics\Lib\Cache::$modulesDataCache[$mod][$if] = $if;
+                    Cache::$modulesDataCache[$mod][$if] = $if;
                 }
             }
-            \Statistics\Lib\Cache::$statisticDataCache['statistic'][$ip] = $statistic_data;
+            Cache::$statisticDataCache['statistic'][$ip] = $statistic_data;
         }
     }
 
