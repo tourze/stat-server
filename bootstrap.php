@@ -1,12 +1,17 @@
 <?php
 
+use tourze\Base\Config;
 use tourze\Tourze\Asset;
+use tourze\View\View;
 
 require 'vendor/autoload.php';
 
 ini_set('display_errors', 'on');
 
-defined('ROOT_PATH') || define('ROOT_PATH', __DIR__ . DIRECTORY_SEPARATOR);
+if ( ! defined('ROOT_PATH'))
+{
+    define('ROOT_PATH', __DIR__ . DIRECTORY_SEPARATOR);
+}
 
 // 检查扩展
 if(!extension_loaded('pcntl'))
@@ -20,3 +25,6 @@ if(!extension_loaded('posix'))
 }
 
 Asset::$assetHost = 'http://local.asset.tourze.com/';
+
+Config::addPath(ROOT_PATH . 'config' . DIRECTORY_SEPARATOR);
+View::addPath(ROOT_PATH . 'view' . DIRECTORY_SEPARATOR);
