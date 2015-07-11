@@ -8,9 +8,24 @@
   ],
   "minimum-stability": "stable",
   "require": {
+    "tourze/core": "dev-master",
+    "tourze/tourze": "dev-master",
     "workerman/workerman": "^3.1"
   },
+  "autoload": {
+    "psr-0": {
+      "stat\\": "src/"
+    }
+  },
   "repositories": [
+    {
+      "type": "git",
+      "url": "https://git.oschina.net/ywisax/com.tourze.php.tourze.git"
+    },
+    {
+      "type": "git",
+      "url": "https://git.oschina.net/ywisax/com.tourze.php.core.git"
+    },
     {
       "type": "composer",
       "url": "http://php.composer.org/repo/packagist/"

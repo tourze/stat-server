@@ -1,8 +1,18 @@
 <?php
 
-if ( ! defined('ROOT_PATH'))
+require 'vendor/autoload.php';
+
+ini_set('display_errors', 'on');
+
+defined('ROOT_PATH') || define('ROOT_PATH', __DIR__ . DIRECTORY_SEPARATOR);
+
+// 检查扩展
+if(!extension_loaded('pcntl'))
 {
-    define('ROOT_PATH', __DIR__ . DIRECTORY_SEPARATOR);
+    exit("Please install pcntl extension. See http://doc3.workerman.net/install/install.html\n");
 }
 
-require 'vendor/autoload.php';
+if(!extension_loaded('posix'))
+{
+    exit("Please install posix extension. See http://doc3.workerman.net/install/install.html\n");
+}

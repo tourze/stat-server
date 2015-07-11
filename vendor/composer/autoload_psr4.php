@@ -6,5 +6,16 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
+    'tourze\\' => array($vendorDir . '/tourze/core/src', $vendorDir . '/tourze/tourze/src'),
     'Workerman\\' => array($vendorDir . '/workerman/workerman'),
+    'Symfony\\Component\\Filesystem\\' => array($vendorDir . '/symfony/filesystem'),
+    'Symfony\\Component\\EventDispatcher\\' => array($vendorDir . '/symfony/event-dispatcher'),
+    'Rhumsaa\\Uuid\\' => array($vendorDir . '/ramsey/uuid/src'),
+    'Respect\\Validation\\' => array($vendorDir . '/respect/validation/library'),
+    'Predis\\' => array($vendorDir . '/predis/predis/src'),
+    'Overtrue\\' => array($vendorDir . '/overtrue/pinyin/src'),
+    'Noodlehaus\\' => array($vendorDir . '/hassankhan/config/src'),
+    'Monolog\\' => array($vendorDir . '/monolog/monolog/src/Monolog'),
+    'League\\OAuth2\\Client\\' => array($vendorDir . '/league/oauth2-client/src'),
+    'Euantor\\SimpleGravatar\\' => array($vendorDir . '/euantor/simple-gravatar/src'),
 );
