@@ -1,5 +1,7 @@
 <?php
 
+use tourze\Tourze\Asset;
+
 require 'vendor/autoload.php';
 
 ini_set('display_errors', 'on');
@@ -16,3 +18,5 @@ if(!extension_loaded('posix'))
 {
     exit("Please install posix extension. See http://doc3.workerman.net/install/install.html\n");
 }
+
+Asset::$assetHost = 'http://local.asset.tourze.com/';

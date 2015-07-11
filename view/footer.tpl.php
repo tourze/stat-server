@@ -1,3 +1,3 @@
-<div class="footer">Powered by <a href="http://www.workerman.net" target="_blank"><strong>Workerman!</strong></a></div>
+<div class="footer">Powered by <a href="http://www.tourze.com" target="_blank"><strong>Tourze</strong></a></div>
 </body>
 </html>
