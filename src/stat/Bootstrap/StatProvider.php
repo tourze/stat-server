@@ -85,21 +85,22 @@ class StatProvider extends Worker
     /**
      * 处理请求统计
      *
-     * @param string $recv_buffer
+     * @param        $connection
+     * @param string $receiveBuffer
      */
-    public function onMessage($connection, $recv_buffer)
+    public function onMessage($connection, $receiveBuffer)
     {
-        $req_data = json_decode(trim($recv_buffer), true);
-        $module = $req_data['module'];
-        $interface = $req_data['interface'];
-        $cmd = $req_data['cmd'];
-        $start_time = isset($req_data['start_time']) ? $req_data['start_time'] : '';
-        $end_time = isset($req_data['end_time']) ? $req_data['end_time'] : '';
-        $date = isset($req_data['date']) ? $req_data['date'] : '';
-        $code = isset($req_data['code']) ? $req_data['code'] : '';
-        $msg = isset($req_data['msg']) ? $req_data['msg'] : '';
-        $offset = isset($req_data['offset']) ? $req_data['offset'] : '';
-        $count = isset($req_data['count']) ? $req_data['count'] : 10;
+        $requestData = json_decode(trim($receiveBuffer), true);
+        $module = $requestData['module'];
+        $interface = $requestData['interface'];
+        $cmd = $requestData['cmd'];
+        $start_time = isset($requestData['start_time']) ? $requestData['start_time'] : '';
+        $end_time = isset($requestData['end_time']) ? $requestData['end_time'] : '';
+        $date = isset($requestData['date']) ? $requestData['date'] : '';
+        $code = isset($requestData['code']) ? $requestData['code'] : '';
+        $msg = isset($requestData['msg']) ? $requestData['msg'] : '';
+        $offset = isset($requestData['offset']) ? $requestData['offset'] : '';
+        $count = isset($requestData['count']) ? $requestData['count'] : 10;
         switch ($cmd)
         {
             case 'get_statistic':
@@ -346,10 +347,10 @@ class StatProvider extends Worker
     /**
      * 日志二分查找法
      *
-     * @param int $start_point
-     * @param int $end_point
-     * @param int $time
-     * @param fd  $fd
+     * @param int      $start_point
+     * @param int      $end_point
+     * @param int      $time
+     * @param resource $fd
      * @return int
      */
     protected function binarySearch($start_point, $end_point, $time, $fd)

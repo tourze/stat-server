@@ -52,28 +52,30 @@ class Statistic
     /**
      * input
      *
-     * @param string $recv_buffer
+     * @param string $receiveBuffer
+     * @return int
      */
-    public static function input($recv_buffer)
+    public static function input($receiveBuffer)
     {
-        if (strlen($recv_buffer) < self::PACKAGE_FIXED_LENGTH)
+        if (strlen($receiveBuffer) < self::PACKAGE_FIXED_LENGTH)
         {
             return 0;
         }
-        $data = unpack("Cmodule_name_len/Cinterface_name_len/fcost_time/Csuccess/Ncode/nmsg_len/Ntime", $recv_buffer);
+        $data = unpack("Cmodule_name_len/Cinterface_name_len/fcost_time/Csuccess/Ncode/nmsg_len/Ntime", $receiveBuffer);
         return $data['module_name_len'] + $data['interface_name_len'] + $data['msg_len'] + self::PACKAGE_FIXED_LENGTH;
     }
 
     /**
      * 编码
      *
-     * @param string $module
-     * @param string $interface
-     * @param float  $cost_time
-     * @param int    $success
-     * @param int    $code
-     * @param string $msg
+     * @param $data
      * @return string
+     * @internal param string $module
+     * @internal param string $interface
+     * @internal param float $cost_time
+     * @internal param int $success
+     * @internal param int $code
+     * @internal param string $msg
      */
     public static function encode($data)
     {

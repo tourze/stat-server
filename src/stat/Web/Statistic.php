@@ -4,6 +4,7 @@ namespace stat\Web;
 
 use stat\Base as StatBase;
 use stat\Cache;
+use tourze\Base\Config;
 
 class Statistic extends Base
 {

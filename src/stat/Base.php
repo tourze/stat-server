@@ -11,7 +11,7 @@ class Base
      * 批量请求
      *
      * @param array $request_buffer_array ['ip:port'=>req_buf, 'ip:port'=>req_buf, ...]
-     * @return multitype:unknown string
+     * @return mixed multitype:unknown string
      */
     public static function multiRequest($request_buffer_array)
     {
