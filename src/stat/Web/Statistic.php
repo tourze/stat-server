@@ -144,7 +144,7 @@ class Statistic extends Base
             $err_msg = '<strong>无法从以下数据源获取数据:</strong>';
             foreach (Cache::$lastFailedIpArray as $ip)
             {
-                $err_msg .= $ip . '::' . \Statistics\Config::$ProviderPort . '&nbsp;';
+                $err_msg .= $ip . '::' . Config::load('statServer')->get('providerPort') . '&nbsp;';
             }
         }
 

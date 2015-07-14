@@ -1,36 +1,18 @@
 <?php
-/**
- * This file is part of workerman.
- *
- * Licensed under The MIT License
- * For full copyright and license information, please see the MIT-LICENSE.txt
- * Redistributions of files must retain the above copyright notice.
- *
- * @author    walkor<walkor@workerman.net>
- * @copyright walkor<walkor@workerman.net>
- * @link      http://www.workerman.net/
- * @license   http://www.opensource.org/licenses/mit-license.php MIT License
- */
 
-require_once __DIR__ . '/Config/Config.php';
-require_once __DIR__ . '/Bootstrap/StatisticProvider.php';
-require_once __DIR__ . '/Bootstrap/StatisticWorker.php';
+use stat\Bootstrap\StatProvider;
+use stat\Bootstrap\StatWorker;
+use Workerman\Worker;
+use Workerman\WebServer;
 
-use Bootstrap\StatisticProvider;
-use Bootstrap\StatisticWorker;
-use \Workerman\Worker;
-use \Workerman\WebServer;
+// StatProvider
+$statistic_provider = new StatProvider("Text://0.0.0.0:55858");
+$statistic_provider->name = 'StatProvider';
 
-// StatisticProvider
-$statistic_provider = new StatisticProvider("Text://0.0.0.0:55858");
-$statistic_provider->name = 'StatisticProvider';
-
-
-// StatisticWorker
-$statistic_worker = new StatisticWorker("Statistic://0.0.0.0:55656");
+// StatWorker
+$statistic_worker = new StatWorker("Statistic://0.0.0.0:55656");
 $statistic_worker->transport = 'udp';
-$statistic_worker->name = 'StatisticWorker';
-
+$statistic_worker->name = 'StatWorker';
 
 // WebServer
 $web = new WebServer("http://0.0.0.0:55757");

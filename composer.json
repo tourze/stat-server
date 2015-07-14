@@ -30,6 +30,8 @@
       "type": "composer",
       "url": "http://php.composer.org/repo/packagist/"
     },
-    {"packagist": false}
+    {
+      "packagist": false
+    }
   ]
 }

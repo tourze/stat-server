@@ -2,6 +2,8 @@
 
 namespace stat;
 
+use tourze\Base\Config;
+
 class Base
 {
 
@@ -93,7 +95,7 @@ class Base
         $buffer = json_encode(['cmd' => 'get_statistic', 'module' => $module, 'interface' => $interface, 'date' => $date]) . "\n";
         $ip_list = ( ! empty($_GET['ip']) && is_array($_GET['ip'])) ? $_GET['ip'] : Cache::$ServerIpList;
         $reqest_buffer_array = [];
-        $port = \Statistics\Config::$ProviderPort;;
+        $port = Config::load('statServer')->get('providerPort');
         foreach ($ip_list as $ip)
         {
             $reqest_buffer_array["$ip:$port"] = $buffer;

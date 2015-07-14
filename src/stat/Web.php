@@ -2,6 +2,7 @@
 
 namespace stat;
 
+use tourze\Base\Config;
 use Workerman\Protocols\Http;
 
 class Web
@@ -40,7 +41,7 @@ class Web
     public static function checkAuth()
     {
         // 如果配置中管理员用户名密码为空则说明不用验证
-        if (\Statistics\Config::$adminName == '' && \Statistics\Config::$adminPassword == '')
+        if (Config::load('statServer')->get('adminName') == '' && Config::load('statServer')->get('adminPassword') == '')
         {
             return true;
         }
@@ -57,7 +58,7 @@ class Web
             {
                 $admin_name = $_POST['admin_name'];
                 $admin_password = $_POST['admin_password'];
-                if ($admin_name != \Statistics\Config::$adminName || $admin_password != \Statistics\Config::$adminPassword)
+                if ($admin_name != Config::load('statServer')->get('adminName') || $admin_password != Config::load('statServer')->get('adminPassword'))
                 {
                     $msg = "用户名或者密码不正确";
                     include ROOT_PATH . 'view/login.tpl.php';

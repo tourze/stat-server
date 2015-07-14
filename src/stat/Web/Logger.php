@@ -4,6 +4,7 @@ namespace stat\Web;
 
 use stat\Base;
 use stat\Cache;
+use tourze\Base\Config;
 
 class Logger extends Base
 {
@@ -50,7 +51,7 @@ class Logger extends Base
     {
         $ip_list = ( ! empty($_GET['ip']) && is_array($_GET['ip'])) ? $_GET['ip'] : Cache::$ServerIpList;
         $offset_list = ( ! empty($_GET['offset']) && is_array($_GET['offset'])) ? $_GET['offset'] : [];
-        $port = \Statistics\Config::$ProviderPort;
+        $port = Config::load('statServer')->get('providerPort');
         $request_buffer_array = [];
         foreach ($ip_list as $key => $ip)
         {

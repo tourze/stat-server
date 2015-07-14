@@ -4,6 +4,7 @@ namespace stat\Web;
 
 use stat\Base as StatBase;
 use stat\Cache;
+use tourze\Base\Config;
 
 class Main extends Base
 {
@@ -150,7 +151,7 @@ class Main extends Base
             $err_msg = '<strong>无法从以下数据源获取数据:</strong>';
             foreach (Cache::$lastFailedIpArray as $ip)
             {
-                $err_msg .= $ip . '::' . \Statistics\Config::$ProviderPort . '&nbsp;';
+                $err_msg .= $ip . '::' . Config::load('statServer')->get('providerPort') . '&nbsp;';
             }
         }
 

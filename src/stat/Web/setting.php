@@ -2,6 +2,8 @@
 
 namespace stat\Web;
 
+use tourze\Base\Config;
+
 class Setting extends Base
 {
 
@@ -25,11 +27,11 @@ class Setting extends Base
                     break;
                 }
                 $suc_msg = "保存成功";
-                \Statistics\Config::$ProviderPort = $detect_port;
+                Config::load('statServer')->set('providerPort', $detect_port);
                 $this->saveDetectPortToCache();
                 break;
             default:
-                $detect_port = \Statistics\Config::$ProviderPort;
+                $detect_port = Config::load('statServer')->get('providerPort');
         }
 
         include ROOT_PATH . '/view/header.tpl.php';
@@ -39,11 +41,11 @@ class Setting extends Base
 
     public function saveDetectPortToCache()
     {
-        foreach(glob(ST_ROOT . '/Config/Cache/*detect_port.cache.php') as $php_file)
+        foreach(glob(Config::load('statServer')->get('configCachePath') . '*detect_port.cache.php') as $php_file)
         {
             unlink($php_file);
         }
-        file_put_contents(ST_ROOT . '/Config/Cache/'.time().'.detect_port.cache.php', "<?php\n\\Statistics\\Config::\$ProviderPort=".var_export(\Statistics\Config::$ProviderPort,true).';');
+        file_put_contents(Config::load('statServer')->get('configCachePath') . time().'.detect_port.cache.php', "<?php\n\\stat\\Cache::\$ProviderPort=".var_export(Config::load('statServer')->get('providerPort'), true).';');
     }
 
 }
