@@ -1,5 +1,6 @@
 <?php
 
+use stat\Cache;
 use tourze\Base\Config;
 use tourze\Tourze\Asset;
 use tourze\View\View;
@@ -29,5 +30,7 @@ Asset::$assetHost = 'http://local.asset.tourze.com/';
 Config::addPath(ROOT_PATH . 'config' . DIRECTORY_SEPARATOR);
 View::addPath(ROOT_PATH . 'view' . DIRECTORY_SEPARATOR);
 
+Cache::$ServerIpList = Config::load('statServer')->get('serverIpList');
+
 // 创建类别名
-class_alias('\stat\Service\Protocol\Statistic', '\Protocols\Statistic');
+@class_alias('\stat\Service\Protocol\Statistic', '\Workerman\Protocols\Statistic');

@@ -23,9 +23,6 @@
 						<li>
 							<a href="/?fn=admin">数据源管理</a>
 						</li>
-						<li>
-							<a href="/?fn=setting">设置</a>
-						</li>
 					</ul>
 				</li>
 			</ul>

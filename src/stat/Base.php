@@ -93,15 +93,15 @@ class Base
     {
         Cache::$statisticDataCache['statistic'] = '';
         $buffer = json_encode(['cmd' => 'get_statistic', 'module' => $module, 'interface' => $interface, 'date' => $date]) . "\n";
-        $ip_list = ( ! empty($_GET['ip']) && is_array($_GET['ip'])) ? $_GET['ip'] : Cache::$ServerIpList;
-        $reqest_buffer_array = [];
+        $ipList = ( ! empty($_GET['ip']) && is_array($_GET['ip'])) ? $_GET['ip'] : Cache::$ServerIpList;
+        $requestBufferArray = [];
         $port = Config::load('statServer')->get('providerPort');
-        foreach ($ip_list as $ip)
+        foreach ($ipList as $ip)
         {
-            $reqest_buffer_array["$ip:$port"] = $buffer;
+            $requestBufferArray["$ip:$port"] = $buffer;
         }
-        $read_buffer_array = self::multiRequest($reqest_buffer_array);
-        foreach ($read_buffer_array as $address => $buf)
+        $readBufferArray = self::multiRequest($requestBufferArray);
+        foreach ($readBufferArray as $address => $buf)
         {
             list($ip, $port) = explode(':', $address);
             $body_data = json_decode(trim($buf), true);
