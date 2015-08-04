@@ -16,23 +16,23 @@ class Base
     public static function multiRequest($request_buffer_array)
     {
         Cache::$lastSuccessIpArray = [];
-        $client_array = $sock_to_ip = $ip_list = [];
+        $clientArray = $sockToIP = $ipList = $sockToAddress = [];
         foreach ($request_buffer_array as $address => $buffer)
         {
             list($ip, $port) = explode(':', $address);
-            $ip_list[$ip] = $ip;
+            $ipList[$ip] = $ip;
             $client = stream_socket_client("tcp://$address", $errno, $errmsg, 1);
             if ( ! $client)
             {
                 continue;
             }
-            $client_array[$address] = $client;
-            stream_set_timeout($client_array[$address], 0, 100000);
-            fwrite($client_array[$address], $buffer);
-            stream_set_blocking($client_array[$address], 0);
-            $sock_to_address[(int) $client] = $address;
+            $clientArray[$address] = $client;
+            stream_set_timeout($clientArray[$address], 0, 100000);
+            fwrite($clientArray[$address], $buffer);
+            stream_set_blocking($clientArray[$address], 0);
+            $sockToAddress[(int) $client] = $address;
         }
-        $read = $client_array;
+        $read = $clientArray;
         $write = $except = $read_buffer = [];
         $time_start = microtime(true);
         $timeout = 0.99;
@@ -43,13 +43,13 @@ class Base
             {
                 foreach ($read as $socket)
                 {
-                    $address = $sock_to_address[(int) $socket];
+                    $address = $sockToAddress[(int) $socket];
                     $buf = fread($socket, 8192);
                     if ( ! $buf)
                     {
                         if (feof($socket))
                         {
-                            unset($client_array[$address]);
+                            unset($clientArray[$address]);
                         }
                         continue;
                     }
@@ -64,7 +64,7 @@ class Base
                     // 数据接收完毕
                     if (($len = strlen($read_buffer[$address])) && $read_buffer[$address][$len - 1] === "\n")
                     {
-                        unset($client_array[$address]);
+                        unset($clientArray[$address]);
                     }
                 }
             }
@@ -73,7 +73,7 @@ class Base
             {
                 break;
             }
-            $read = $client_array;
+            $read = $clientArray;
         }
 
         foreach ($read_buffer as $address => $buf)
@@ -82,7 +82,7 @@ class Base
             Cache::$lastSuccessIpArray[$ip] = $ip;
         }
 
-        Cache::$lastFailedIpArray = array_diff($ip_list, Cache::$lastSuccessIpArray);
+        Cache::$lastFailedIpArray = array_diff($ipList, Cache::$lastSuccessIpArray);
 
         ksort($read_buffer);
 
@@ -126,7 +126,7 @@ class Base
     public static function formatSt($str, $date, &$code_map)
     {
         // time:[success_count:xx,success_cost_time:xx,fail_count:xx,fail_cost_time:xx]
-        $st_data = $code_map = [];
+        $stData = $code_map = [];
         $st_explode = explode("\n", $str);
         // 汇总计算
         foreach ($st_explode as $line)
@@ -137,21 +137,21 @@ class Base
             {
                 continue;
             }
-            $time_line = $line_data[1];
-            $time_line = ceil($time_line / 300) * 300;
+            $timeLine = $line_data[1];
+            $timeLine = intval(ceil($timeLine / 300) * 300);
             $success_count = $line_data[2];
             $success_cost_time = $line_data[3];
             $fail_count = $line_data[4];
             $fail_cost_time = $line_data[5];
             $tmp_code_map = json_decode($line_data[6], true);
-            if ( ! isset($st_data[$time_line]))
+            if ( ! isset($stData[$timeLine]))
             {
-                $st_data[$time_line] = ['success_count' => 0, 'success_cost_time' => 0, 'fail_count' => 0, 'fail_cost_time' => 0];
+                $stData[$timeLine] = ['success_count' => 0, 'success_cost_time' => 0, 'fail_count' => 0, 'fail_cost_time' => 0];
             }
-            $st_data[$time_line]['success_count'] += $success_count;
-            $st_data[$time_line]['success_cost_time'] += $success_cost_time;
-            $st_data[$time_line]['fail_count'] += $fail_count;
-            $st_data[$time_line]['fail_cost_time'] += $fail_cost_time;
+            $stData[$timeLine]['success_count'] += $success_count;
+            $stData[$timeLine]['success_cost_time'] += $success_cost_time;
+            $stData[$timeLine]['fail_count'] += $fail_count;
+            $stData[$timeLine]['fail_cost_time'] += $fail_cost_time;
 
             if (is_array($tmp_code_map))
             {
@@ -166,14 +166,14 @@ class Base
             }
         }
         // 按照时间排序
-        ksort($st_data);
+        ksort($stData);
         // time => [total_count:xx,success_count:xx,suc_avg_time:xx,fail_count:xx,fail_avg_time:xx,percent:xx]
         $data = [];
         // 计算成功率 耗时
-        foreach ($st_data as $time_line => $item)
+        foreach ($stData as $timeLine => $item)
         {
-            $data[$time_line] = [
-                'time'           => date('Y-m-d H:i:s', $time_line),
+            $data[$timeLine] = [
+                'time'           => date('Y-m-d H:i:s', $timeLine),
                 'total_count'    => $item['success_count'] + $item['fail_count'],
                 'total_avg_time' => $item['success_count'] + $item['fail_count'] == 0 ? 0 : round(($item['success_cost_time'] + $item['fail_cost_time']) / ($item['success_count'] + $item['fail_count']), 6),
                 'success_count'      => $item['success_count'],

@@ -7,7 +7,7 @@ use tourze\View\View;
 
 require 'vendor/autoload.php';
 
-//ini_set('display_errors', 'on');
+ini_set('display_errors', 'on');
 
 if ( ! defined('ROOT_PATH'))
 {

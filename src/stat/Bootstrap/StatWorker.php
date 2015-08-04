@@ -268,20 +268,20 @@ class StatWorker extends Worker
      * 清除磁盘数据
      *
      * @param string $file
-     * @param int    $exp_time
+     * @param int    $expiredTime
      */
-    public function clearDisk($file = null, $exp_time = 86400)
+    public function clearDisk($file = null, $expiredTime = 86400)
     {
         $time_now = time();
         if (is_file($file))
         {
-            $mtime = filemtime($file);
-            if ( ! $mtime)
+            $mTime = filemtime($file);
+            if ( ! $mTime)
             {
-                $this->notice("filemtime $file fail");
+                print("filemtime $file fail");
                 return;
             }
-            if ($time_now - $mtime > $exp_time)
+            if ($time_now - $mTime > $expiredTime)
             {
                 unlink($file);
             }
@@ -289,7 +289,7 @@ class StatWorker extends Worker
         }
         foreach (glob($file . "/*") as $file_name)
         {
-            $this->clearDisk($file_name, $exp_time);
+            $this->clearDisk($file_name, $expiredTime);
         }
     }
 } 
