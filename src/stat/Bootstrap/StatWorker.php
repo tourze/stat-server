@@ -3,6 +3,8 @@
 namespace stat\Bootstrap;
 
 use tourze\Base\Config;
+use tourze\Base\Helper\Arr;
+use Workerman\Connection\ConnectionInterface;
 use Workerman\Worker;
 use Workerman\Lib\Timer;
 
@@ -38,7 +40,7 @@ class StatWorker extends Worker
 
     /**
      * 统计数据
-     * ip=>modid=>interface=>['code'=>[xx=>count,xx=>count],'suc_cost_time'=>xx,'fail_cost_time'=>xx, 'suc_count'=>xx, 'fail_count'=>xx]
+     * ip=>modid=>interface=>['code'=>[xx=>count,xx=>count],'success_cost_time'=>xx,'fail_cost_time'=>xx, 'success_count'=>xx, 'fail_count'=>xx]
      *
      * @var array
      */
@@ -83,28 +85,41 @@ class StatWorker extends Worker
      * 业务处理
      *
      * @see Man\Core.SocketWorker::dealProcess()
+     * @param ConnectionInterface $connection
+     * @param array               $data
      */
     public function onMessage($connection, $data)
     {
         // 解码
-        $module = $data['module'];
-        $interface = $data['interface'];
-        $cost_time = $data['cost_time'];
-        $success = $data['success'];
-        $time = $data['time'];
-        $code = $data['code'];
-        $msg = str_replace("\n", "<br>", $data['msg']);
+        $module = Arr::get($data, 'module');
+        $interface = Arr::get($data, 'interface');
+        $costTime = Arr::get($data, 'cost_time');
+        $success = Arr::get($data, 'success');
+        $time = Arr::get($data, 'time');
+        $code = Arr::get($data, 'code');
+        $msg = str_replace("\n", "<br>", Arr::get($data, 'msg'));
         $ip = $connection->getRemoteIp();
 
         // 模块接口统计
-        $this->collectStatistics($module, $interface, $cost_time, $success, $ip, $code, $msg);
+        $this->collectStatistics($module, $interface, $costTime, $success, $ip, $code, $msg);
         // 全局统计
-        $this->collectStatistics('WorkerMan', 'Statistics', $cost_time, $success, $ip, $code, $msg);
+        $this->collectStatistics('WorkerMan', 'Statistics', $costTime, $success, $ip, $code, $msg);
 
         // 失败记录日志
         if ( ! $success)
         {
-            $this->logBuffer .= date('Y-m-d H:i:s', $time) . "\t$ip\t$module::$interface\tcode:$code\tmsg:$msg\n";
+            $this->logBuffer .= date('Y-m-d H:i:s', $time)
+                . "\t"
+                . $ip
+                . "\t"
+                . $module
+                . "::"
+                . $interface
+                . "\t"
+                . "code:$code"
+                . "\t"
+                . "msg:$msg"
+                . "\n";
             if (strlen($this->logBuffer) >= self::MAX_LOG_BUFFER_SZIE)
             {
                 $this->writeLogToDisk();
@@ -137,7 +152,7 @@ class StatWorker extends Worker
         }
         if ( ! isset($this->statisticData[$ip][$module][$interface]))
         {
-            $this->statisticData[$ip][$module][$interface] = ['code' => [], 'suc_cost_time' => 0, 'fail_cost_time' => 0, 'suc_count' => 0, 'fail_count' => 0];
+            $this->statisticData[$ip][$module][$interface] = ['code' => [], 'success_cost_time' => 0, 'fail_cost_time' => 0, 'success_count' => 0, 'fail_count' => 0];
         }
         if ( ! isset($this->statisticData[$ip][$module][$interface]['code'][$code]))
         {
@@ -146,8 +161,8 @@ class StatWorker extends Worker
         $this->statisticData[$ip][$module][$interface]['code'][$code]++;
         if ($success)
         {
-            $this->statisticData[$ip][$module][$interface]['suc_cost_time'] += $cost_time;
-            $this->statisticData[$ip][$module][$interface]['suc_count']++;
+            $this->statisticData[$ip][$module][$interface]['success_cost_time'] += $cost_time;
+            $this->statisticData[$ip][$module][$interface]['success_count']++;
         }
         else
         {
@@ -161,7 +176,7 @@ class StatWorker extends Worker
      *
      * @return void
      */
-    public function writeStatisticsToDisk()
+    public function writeStatToDisk()
     {
         $time = time();
         // 循环将每个ip的统计数据写入磁盘
@@ -179,7 +194,7 @@ class StatWorker extends Worker
                 // 依次写入磁盘
                 foreach ($items as $interface => $data)
                 {
-                    file_put_contents($file_dir . "/{$interface}." . date('Y-m-d'), "$ip\t$time\t{$data['suc_count']}\t{$data['suc_cost_time']}\t{$data['fail_count']}\t{$data['fail_cost_time']}\t" . json_encode($data['code']) . "\n", FILE_APPEND | LOCK_EX);
+                    file_put_contents($file_dir . "/{$interface}." . date('Y-m-d'), "$ip\t$time\t{$data['success_count']}\t{$data['success_cost_time']}\t{$data['fail_count']}\t{$data['fail_cost_time']}\t" . json_encode($data['code']) . "\n", FILE_APPEND | LOCK_EX);
                 }
             }
         }
@@ -215,22 +230,26 @@ class StatWorker extends Worker
     {
         // 初始化目录
         umask(0);
-        $statistic_dir = Config::load('statServer')->get('dataPath') . $this->statisticDir;
-        if ( ! is_dir($statistic_dir))
+
+        // 保证存放数据的目录存在和可写
+        $storageDir = Config::load('statServer')->get('dataPath') . $this->statisticDir;
+        if ( ! is_dir($storageDir))
         {
-            mkdir($statistic_dir, 0777, true);
+            mkdir($storageDir, 0777, true);
         }
-        $log_dir = Config::load('statServer')->get('dataPath') . $this->logDir;
-        if ( ! is_dir($log_dir))
+        $logDir = Config::load('statServer')->get('dataPath') . $this->logDir;
+        if ( ! is_dir($logDir))
         {
-            mkdir($log_dir, 0777, true);
+            mkdir($logDir, 0777, true);
         }
+
         // 定时保存统计数据
-        Timer::add(self::WRITE_PERIOD_LENGTH, [$this, 'writeStatisticsToDisk']);
+        Timer::add(self::WRITE_PERIOD_LENGTH, [$this, 'writeStatToDisk']);
         Timer::add(self::WRITE_PERIOD_LENGTH, [$this, 'writeLogToDisk']);
+
         // 定时清理不用的统计数据
-        Timer::add(self::CLEAR_PERIOD_LENGTH, [$this, 'clearDisk'], [Config::load('statServer')->get('dataPath') . $this->statisticDir, self::EXPIRED_TIME]);
-        Timer::add(self::CLEAR_PERIOD_LENGTH, [$this, 'clearDisk'], [Config::load('statServer')->get('dataPath') . $this->logDir, self::EXPIRED_TIME]);
+        Timer::add(self::CLEAR_PERIOD_LENGTH, [$this, 'clearDisk'], [$storageDir, self::EXPIRED_TIME]);
+        Timer::add(self::CLEAR_PERIOD_LENGTH, [$this, 'clearDisk'], [$logDir, self::EXPIRED_TIME]);
 
     }
 
@@ -242,7 +261,7 @@ class StatWorker extends Worker
     protected function onStop()
     {
         $this->writeLogToDisk();
-        $this->writeStatisticsToDisk();
+        $this->writeStatToDisk();
     }
 
     /**

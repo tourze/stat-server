@@ -1,6 +1,8 @@
 <?php
 
 namespace stat\Service\Protocol;
+use tourze\Base\Helper\Arr;
+
 /**
  *
  * struct statisticPortocol
@@ -61,8 +63,21 @@ class Statistic
         {
             return 0;
         }
-        $data = unpack("Cmodule_name_len/Cinterface_name_len/fcost_time/Csuccess/Ncode/nmsg_len/Ntime", $receiveBuffer);
+
+        $data = self::unpack($receiveBuffer);
         return $data['module_name_len'] + $data['interface_name_len'] + $data['msg_len'] + self::PACKAGE_FIXED_LENGTH;
+    }
+
+    /**
+     * 解包数据
+     *
+     * @param string $data
+     * @return array
+     */
+    public static function unpack($data)
+    {
+        $result = unpack("Cmodule_name_len/Cinterface_name_len/fcost_time/Csuccess/Ncode/nmsg_len/Ntime", $data);
+        return $result;
     }
 
     /**
@@ -99,31 +114,31 @@ class Statistic
         }
 
         // 防止msg过长
-        $module_name_length = strlen($module);
-        $interface_name_length = strlen($interface);
-        $avalible_size = self::MAX_UDP_PACKGE_SIZE - self::PACKAGE_FIXED_LENGTH - $module_name_length - $interface_name_length;
-        if (strlen($msg) > $avalible_size)
+        $moduleNameLength = strlen($module);
+        $interfaceNameLength = strlen($interface);
+        $availableSize = self::MAX_UDP_PACKGE_SIZE - self::PACKAGE_FIXED_LENGTH - $moduleNameLength - $interfaceNameLength;
+        if (strlen($msg) > $availableSize)
         {
-            $msg = substr($msg, 0, $avalible_size);
+            $msg = substr($msg, 0, $availableSize);
         }
 
         // 打包
-        return pack('CCfCNnN', $module_name_length, $interface_name_length, $cost_time, $success ? 1 : 0, $code, strlen($msg), time()) . $module . $interface . $msg;
+        return pack('CCfCNnN', $moduleNameLength, $interfaceNameLength, $cost_time, $success ? 1 : 0, $code, strlen($msg), time()) . $module . $interface . $msg;
     }
 
     /**
      * 解包
      *
-     * @param string $recv_buffer
+     * @param string $receiveBuffer
      * @return array
      */
-    public static function decode($recv_buffer)
+    public static function decode($receiveBuffer)
     {
         // 解包
-        $data = unpack("Cmodule_name_len/Cinterface_name_len/fcost_time/Csuccess/Ncode/nmsg_len/Ntime", $recv_buffer);
-        $module = substr($recv_buffer, self::PACKAGE_FIXED_LENGTH, $data['module_name_len']);
-        $interface = substr($recv_buffer, self::PACKAGE_FIXED_LENGTH + $data['module_name_len'], $data['interface_name_len']);
-        $msg = substr($recv_buffer, self::PACKAGE_FIXED_LENGTH + $data['module_name_len'] + $data['interface_name_len']);
+        $data = self::unpack($receiveBuffer);
+        $module = substr($receiveBuffer, self::PACKAGE_FIXED_LENGTH, Arr::get($data, 'module_name_len'));
+        $interface = substr($receiveBuffer, self::PACKAGE_FIXED_LENGTH + $data['module_name_len'], $data['interface_name_len']);
+        $msg = substr($receiveBuffer, self::PACKAGE_FIXED_LENGTH + $data['module_name_len'] + $data['interface_name_len']);
         return [
             'module'    => $module,
             'interface' => $interface,

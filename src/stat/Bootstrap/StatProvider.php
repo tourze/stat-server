@@ -3,6 +3,8 @@
 namespace stat\Bootstrap;
 
 use tourze\Base\Config;
+use tourze\Base\Helper\Arr;
+use Workerman\Connection\ConnectionInterface;
 use Workerman\Worker;
 
 class StatProvider extends Worker
@@ -37,7 +39,7 @@ class StatProvider extends Worker
 
     /**
      * 统计数据
-     * ip=>modid=>interface=>['code'=>[xx=>count,xx=>count],'suc_cost_time'=>xx,'fail_cost_time'=>xx, 'suc_count'=>xx, 'fail_count'=>xx]
+     * ip=>modid=>interface=>['code'=>[xx=>count,xx=>count],'success_cost_time'=>xx,'fail_cost_time'=>xx, 'success_count'=>xx, 'fail_count'=>xx]
      *
      * @var array
      */
@@ -85,22 +87,26 @@ class StatProvider extends Worker
     /**
      * 处理请求统计
      *
-     * @param        $connection
-     * @param string $receiveBuffer
+     * @param ConnectionInterface $connection
+     * @param string              $receiveBuffer
      */
     public function onMessage($connection, $receiveBuffer)
     {
         $requestData = json_decode(trim($receiveBuffer), true);
-        $module = $requestData['module'];
-        $interface = $requestData['interface'];
-        $cmd = $requestData['cmd'];
-        $start_time = isset($requestData['start_time']) ? $requestData['start_time'] : '';
-        $end_time = isset($requestData['end_time']) ? $requestData['end_time'] : '';
-        $date = isset($requestData['date']) ? $requestData['date'] : '';
-        $code = isset($requestData['code']) ? $requestData['code'] : '';
-        $msg = isset($requestData['msg']) ? $requestData['msg'] : '';
-        $offset = isset($requestData['offset']) ? $requestData['offset'] : '';
-        $count = isset($requestData['count']) ? $requestData['count'] : 10;
+
+        $module = Arr::get($requestData, 'module');
+        $interface = Arr::get($requestData, 'interface');
+        $cmd = Arr::get($requestData, 'cmd');
+
+        $start_time = Arr::get($requestData, 'start_time', '');
+        $end_time = Arr::get($requestData, 'end_time', '');
+        $date = Arr::get($requestData, 'date', '');
+        $code = Arr::get($requestData, 'code', '');
+        $msg = Arr::get($requestData, 'msg', '');
+        $offset = Arr::get($requestData, 'offset', '');
+        $count = Arr::get($requestData, 'count', 10);
+
+        // 根据发送过来的cmd参数
         switch ($cmd)
         {
             case 'get_statistic':
@@ -119,38 +125,42 @@ class StatProvider extends Worker
     /**
      * 获取模块
      *
+     * @param string $currentModule
      * @return array
      */
-    public function getModules($current_module = '')
+    public function getModules($currentModule = '')
     {
-        $st_dir = Config::load('statServer')->get('dataPath') . $this->statisticDir;
-        $modules_name_array = [];
-        foreach (glob($st_dir . "/*", GLOB_ONLYDIR) as $module_file)
+        $storageDir = Config::load('statServer')->get('dataPath') . $this->statisticDir;
+
+        $result = [];
+        foreach (glob($storageDir . "/*", GLOB_ONLYDIR) as $moduleFile)
         {
-            $tmp = explode("/", $module_file);
+            $tmp = explode("/", $moduleFile);
             $module = end($tmp);
-            $modules_name_array[$module] = [];
-            if ($current_module == $module)
+            $result[$module] = [];
+
+            // 最多只支持两层
+            if ($currentModule == $module)
             {
-                $st_dir = $st_dir . $current_module . '/';
-                $all_interface = [];
-                foreach (glob($st_dir . "*") as $file)
+                $storageDir = $storageDir . $currentModule . '/';
+                $interfaceList = [];
+                foreach (glob($storageDir . "*") as $file)
                 {
                     if (is_dir($file))
                     {
                         continue;
                     }
                     list($interface, $date) = explode(".", basename($file));
-                    $all_interface[$interface] = $interface;
+                    $interfaceList[$interface] = $interface;
                 }
-                $modules_name_array[$module] = $all_interface;
+                $result[$module] = $interfaceList;
             }
         }
-        return $modules_name_array;
+        return $result;
     }
 
     /**
-     * 获得统计数据
+     * 获得指定模块的统计数据
      *
      * @param string $module
      * @param string $interface
@@ -164,17 +174,17 @@ class StatProvider extends Worker
             return '';
         }
         // log文件
-        $log_file = Config::load('statServer')->get('dataPath') . $this->statisticDir . "{$module}/{$interface}.{$date}";
+        $logFile = Config::load('statServer')->get('dataPath') . $this->statisticDir . "{$module}/{$interface}.{$date}";
 
-        $handle = @fopen($log_file, 'r');
+        $handle = @fopen($logFile, 'r');
         if ( ! $handle)
         {
             return '';
         }
 
         // 预处理统计数据，每5分钟一行
-        // [time=>[ip=>['suc_count'=>xx, 'suc_cost_time'=>xx, 'fail_count'=>xx, 'fail_cost_time'=>xx, 'code_map'=>[code=>count, ..], ..], ..]
-        $statistics_data = [];
+        // [time=>[ip=>['success_count'=>xx, 'success_cost_time'=>xx, 'fail_count'=>xx, 'fail_cost_time'=>xx, 'code_map'=>[code=>count, ..], ..], ..]
+        $statData = [];
         while ( ! feof($handle))
         {
             $line = fgets($handle, 4096);
@@ -185,76 +195,84 @@ class StatProvider extends Worker
                 {
                     continue;
                 }
-                list($ip, $time, $suc_count, $suc_cost_time, $fail_count, $fail_cost_time, $code_map) = $explode;
-                $time = ceil($time / 300) * 300;
-                if ( ! isset($statistics_data[$time]))
+                list($ip, $time, $successCount, $successCostTime, $failCount, $failCostTime, $codeMap) = $explode;
+                $time = intval(ceil($time / 300) * 300);
+                if ( ! isset($statData[$time]))
                 {
-                    $statistics_data[$time] = [];
+                    $statData[$time] = [];
                 }
-                if ( ! isset($statistics_data[$time][$ip]))
+                if ( ! isset($statData[$time][$ip]))
                 {
-                    $statistics_data[$time][$ip] = [
-                        'suc_count'      => 0,
-                        'suc_cost_time'  => 0,
-                        'fail_count'     => 0,
-                        'fail_cost_time' => 0,
-                        'code_map'       => [],
+                    $statData[$time][$ip] = [
+                        'success_count'     => 0,
+                        'success_cost_time' => 0,
+                        'fail_count'        => 0,
+                        'fail_cost_time'    => 0,
+                        'code_map'          => [],
                     ];
                 }
-                $statistics_data[$time][$ip]['suc_count'] += $suc_count;
-                $statistics_data[$time][$ip]['suc_cost_time'] += round($suc_cost_time, 5);
-                $statistics_data[$time][$ip]['fail_count'] += $fail_count;
-                $statistics_data[$time][$ip]['fail_cost_time'] += round($fail_cost_time, 5);
-                $code_map = json_decode(trim($code_map), true);
-                if ($code_map && is_array($code_map))
+                $statData[$time][$ip]['success_count'] += $successCount;
+                $statData[$time][$ip]['success_cost_time'] += round($successCostTime, 5);
+                $statData[$time][$ip]['fail_count'] += $failCount;
+                $statData[$time][$ip]['fail_cost_time'] += round($failCostTime, 5);
+                $codeMap = json_decode(trim($codeMap), true);
+                if ($codeMap && is_array($codeMap))
                 {
-                    foreach ($code_map as $code => $count)
+                    foreach ($codeMap as $code => $count)
                     {
-                        if ( ! isset($statistics_data[$time][$ip]['code_map'][$code]))
+                        if ( ! isset($statData[$time][$ip]['code_map'][$code]))
                         {
-                            $statistics_data[$time][$ip]['code_map'][$code] = 0;
+                            $statData[$time][$ip]['code_map'][$code] = 0;
                         }
-                        $statistics_data[$time][$ip]['code_map'][$code] += $count;
+                        $statData[$time][$ip]['code_map'][$code] += $count;
                     }
                 }
             } // end if
         } // end while
 
         fclose($handle);
-        ksort($statistics_data);
+        ksort($statData);
 
         // 整理数据
-        $statistics_str = '';
-        foreach ($statistics_data as $time => $items)
+        $result = '';
+        foreach ($statData as $time => $items)
         {
             foreach ($items as $ip => $item)
             {
-                $statistics_str .= "$ip\t$time\t{$item['suc_count']}\t{$item['suc_cost_time']}\t{$item['fail_count']}\t{$item['fail_cost_time']}\t" . json_encode($item['code_map']) . "\n";
+                $result .= "$ip\t$time\t{$item['success_count']}\t{$item['success_cost_time']}\t{$item['fail_count']}\t{$item['fail_cost_time']}\t" . json_encode($item['code_map']) . "\n";
             }
         }
-        return $statistics_str;
+        return $result;
     }
 
-
     /**
-     * 获取指定日志
+     * 获取指定时间段的日志
      *
+     * @param string $module
+     * @param string $interface
+     * @param string $startTime
+     * @param string $endTime
+     * @param string $code
+     * @param string $msg
+     * @param string $offset
+     * @param int    $count
+     * @return array
      */
-    protected function getStasticLog($module, $interface, $start_time = '', $end_time = '', $code = '', $msg = '', $offset = '', $count = 100)
+    protected function getStasticLog($module, $interface, $startTime = '', $endTime = '', $code = '', $msg = '', $offset = '', $count = 100)
     {
         // log文件
-        $log_file = Config::load('statServer')->get('dataPath') . $this->logDir . (empty($start_time) ? date('Y-m-d') : date('Y-m-d', $start_time));
-        if ( ! is_readable($log_file))
+        $logFile = Config::load('statServer')->get('dataPath') . $this->logDir . (empty($startTime) ? date('Y-m-d') : date('Y-m-d', $startTime));
+        if ( ! is_readable($logFile))
         {
             return ['offset' => 0, 'data' => ''];
         }
         // 读文件
-        $h = fopen($log_file, 'r');
+        $h = fopen($logFile, 'r');
 
         // 如果有时间，则进行二分查找，加速查询
-        if ($start_time && $offset == 0 && ($file_size = filesize($log_file)) > 1024000)
+        if ($startTime && $offset == 0 && ($file_size = filesize($logFile)) > 1024000)
         {
-            $offset = $this->binarySearch(0, $file_size, $start_time - 1, $h);
+            $offset = $this->binarySearch(0, $file_size, $startTime - 1, $h);
             $offset = $offset < 100000 ? 0 : $offset - 100000;
         }
 
@@ -317,16 +335,16 @@ class StatProvider extends Worker
             {
                 // 判断时间是否符合要求
                 $time = strtotime($match[1]);
-                if ($start_time)
+                if ($startTime)
                 {
-                    if ($time < $start_time)
+                    if ($time < $startTime)
                     {
                         continue;
                     }
                 }
-                if ($end_time)
+                if ($endTime)
                 {
-                    if ($time > $end_time)
+                    if ($time > $endTime)
                     {
                         break;
                     }
@@ -347,21 +365,21 @@ class StatProvider extends Worker
     /**
      * 日志二分查找法
      *
-     * @param int      $start_point
-     * @param int      $end_point
+     * @param int      $startPoint
+     * @param int      $endPoint
      * @param int      $time
      * @param resource $fd
      * @return int
      */
-    protected function binarySearch($start_point, $end_point, $time, $fd)
+    protected function binarySearch($startPoint, $endPoint, $time, $fd)
     {
-        if ($end_point - $start_point < 65535)
+        if ($endPoint - $startPoint < 65535)
         {
-            return $start_point;
+            return $startPoint;
         }
 
         // 计算中点
-        $mid_point = (int) (($end_point + $start_point) / 2);
+        $mid_point = (int) (($endPoint + $startPoint) / 2);
 
         // 定位文件指针在中点
         fseek($fd, $mid_point - 1);
@@ -370,21 +388,21 @@ class StatProvider extends Worker
         $line = fgets($fd);
         if (feof($fd) || false === $line)
         {
-            return $start_point;
+            return $startPoint;
         }
 
         // 第一行可能数据不全，再读一行
         $line = fgets($fd);
         if (feof($fd) || false === $line || trim($line) == '')
         {
-            return $start_point;
+            return $startPoint;
         }
 
         // 判断是否越界
         $current_point = ftell($fd);
-        if ($current_point >= $end_point)
+        if ($current_point >= $endPoint)
         {
-            return $start_point;
+            return $startPoint;
         }
 
         // 获得时间
@@ -394,11 +412,11 @@ class StatProvider extends Worker
         // 判断时间，返回指针位置
         if ($tmp_time > $time)
         {
-            return $this->binarySearch($start_point, $current_point, $time, $fd);
+            return $this->binarySearch($startPoint, $current_point, $time, $fd);
         }
         elseif ($tmp_time < $time)
         {
-            return $this->binarySearch($current_point, $end_point, $time, $fd);
+            return $this->binarySearch($current_point, $endPoint, $time, $fd);
         }
         else
         {

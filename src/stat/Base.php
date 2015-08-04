@@ -125,13 +125,13 @@ class Base
 
     public static function formatSt($str, $date, &$code_map)
     {
-        // time:[suc_count:xx,suc_cost_time:xx,fail_count:xx,fail_cost_time:xx]
+        // time:[success_count:xx,success_cost_time:xx,fail_count:xx,fail_cost_time:xx]
         $st_data = $code_map = [];
         $st_explode = explode("\n", $str);
         // 汇总计算
         foreach ($st_explode as $line)
         {
-            // line = IP time suc_count suc_cost_time fail_count fail_cost_time code_json
+            // line = IP time success_count success_cost_time fail_count fail_cost_time code_json
             $line_data = explode("\t", $line);
             if ( ! isset($line_data[5]))
             {
@@ -139,17 +139,17 @@ class Base
             }
             $time_line = $line_data[1];
             $time_line = ceil($time_line / 300) * 300;
-            $suc_count = $line_data[2];
-            $suc_cost_time = $line_data[3];
+            $success_count = $line_data[2];
+            $success_cost_time = $line_data[3];
             $fail_count = $line_data[4];
             $fail_cost_time = $line_data[5];
             $tmp_code_map = json_decode($line_data[6], true);
             if ( ! isset($st_data[$time_line]))
             {
-                $st_data[$time_line] = ['suc_count' => 0, 'suc_cost_time' => 0, 'fail_count' => 0, 'fail_cost_time' => 0];
+                $st_data[$time_line] = ['success_count' => 0, 'success_cost_time' => 0, 'fail_count' => 0, 'fail_cost_time' => 0];
             }
-            $st_data[$time_line]['suc_count'] += $suc_count;
-            $st_data[$time_line]['suc_cost_time'] += $suc_cost_time;
+            $st_data[$time_line]['success_count'] += $success_count;
+            $st_data[$time_line]['success_cost_time'] += $success_cost_time;
             $st_data[$time_line]['fail_count'] += $fail_count;
             $st_data[$time_line]['fail_cost_time'] += $fail_cost_time;
 
@@ -167,20 +167,20 @@ class Base
         }
         // 按照时间排序
         ksort($st_data);
-        // time => [total_count:xx,suc_count:xx,suc_avg_time:xx,fail_count:xx,fail_avg_time:xx,percent:xx]
+        // time => [total_count:xx,success_count:xx,suc_avg_time:xx,fail_count:xx,fail_avg_time:xx,percent:xx]
         $data = [];
         // 计算成功率 耗时
         foreach ($st_data as $time_line => $item)
         {
             $data[$time_line] = [
                 'time'           => date('Y-m-d H:i:s', $time_line),
-                'total_count'    => $item['suc_count'] + $item['fail_count'],
-                'total_avg_time' => $item['suc_count'] + $item['fail_count'] == 0 ? 0 : round(($item['suc_cost_time'] + $item['fail_cost_time']) / ($item['suc_count'] + $item['fail_count']), 6),
-                'suc_count'      => $item['suc_count'],
-                'suc_avg_time'   => $item['suc_count'] == 0 ? $item['suc_count'] : round($item['suc_cost_time'] / $item['suc_count'], 6),
+                'total_count'    => $item['success_count'] + $item['fail_count'],
+                'total_avg_time' => $item['success_count'] + $item['fail_count'] == 0 ? 0 : round(($item['success_cost_time'] + $item['fail_cost_time']) / ($item['success_count'] + $item['fail_count']), 6),
+                'success_count'      => $item['success_count'],
+                'suc_avg_time'   => $item['success_count'] == 0 ? $item['success_count'] : round($item['success_cost_time'] / $item['success_count'], 6),
                 'fail_count'     => $item['fail_count'],
                 'fail_avg_time'  => $item['fail_count'] == 0 ? 0 : round($item['fail_cost_time'] / $item['fail_count'], 6),
-                'precent'        => $item['suc_count'] + $item['fail_count'] == 0 ? 0 : round(($item['suc_count'] * 100 / ($item['suc_count'] + $item['fail_count'])), 4),
+                'precent'        => $item['success_count'] + $item['fail_count'] == 0 ? 0 : round(($item['success_count'] * 100 / ($item['success_count'] + $item['fail_count'])), 4),
             ];
         }
         $time_point = strtotime($date);
@@ -191,7 +191,7 @@ class Base
                     'time'           => date('Y-m-d H:i:s', $time_point),
                     'total_count'    => 0,
                     'total_avg_time' => 0,
-                    'suc_count'      => 0,
+                    'success_count'      => 0,
                     'suc_avg_time'   => 0,
                     'fail_count'     => 0,
                     'fail_avg_time'  => 0,
