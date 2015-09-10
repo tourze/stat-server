@@ -4,6 +4,7 @@ namespace stat;
 
 use tourze\Base\Base;
 use tourze\Base\Config;
+use tourze\Base\Helper\Arr;
 
 class StatServer
 {
@@ -62,7 +63,7 @@ class StatServer
         }
         $read = $clientArray;
         $write = $except = $readBuffer = [];
-        $time_start = microtime(true);
+        $timeStart = microtime(true);
         $timeout = 0.99;
         // 轮询处理数据
         while (count($read) > 0)
@@ -97,7 +98,7 @@ class StatServer
                 }
             }
             // 超时了
-            if (microtime(true) - $time_start > $timeout)
+            if (microtime(true) - $timeStart > $timeout)
             {
                 break;
             }
@@ -157,10 +158,11 @@ class StatServer
             $ip = array_shift($temp);
 
             $bodyData = json_decode(trim($buf), true);
-            $statistic_data = isset($bodyData['statistic']) ? $bodyData['statistic'] : '';
-            $modules_data = isset($bodyData['modules']) ? $bodyData['modules'] : [];
+            $statData = Arr::get($bodyData, 'statistic', '');
+            $modulesData = Arr::get($bodyData, 'modules', []);
+
             // 整理modules
-            foreach ($modules_data as $mod => $interfaces)
+            foreach ($modulesData as $mod => $interfaces)
             {
                 if ( ! isset(Cache::$modulesDataCache[$mod]))
                 {
@@ -171,7 +173,7 @@ class StatServer
                     Cache::$modulesDataCache[$mod][$if] = $if;
                 }
             }
-            Cache::$statDataCache['statistic'][$ip] = $statistic_data;
+            Cache::$statDataCache['statistic'][$ip] = $statData;
         }
 
         Base::getLog()->info(__METHOD__ . ' calling multiRequestStAndModules - end');
@@ -189,38 +191,40 @@ class StatServer
     {
         // time:[success_count:xx,success_cost_time:xx,fail_count:xx,fail_cost_time:xx]
         $stData = $codeMap = [];
-        $st_explode = explode("\n", $str);
+        $lines = explode("\n", $str);
         // 汇总计算
-        foreach ($st_explode as $line)
+        foreach ($lines as $line)
         {
             // line = IP time success_count success_cost_time fail_count fail_cost_time code_json
-            $line_data = explode("\t", $line);
-            if ( ! isset($line_data[5]))
+            $lineData = explode("\t", $line);
+            if ( ! isset($lineData[5]))
             {
                 continue;
             }
-            $timeLine = $line_data[1];
+            $timeLine = Arr::get($lineData, 1);
             $timeLine = intval(ceil($timeLine / 300) * 300);
-            $success_count = $line_data[2];
-            $success_cost_time = $line_data[3];
-            $fail_count = $line_data[4];
-            $fail_cost_time = $line_data[5];
-            $tmp_code_map = json_decode($line_data[6], true);
+            $successCount = Arr::get($lineData, 2);
+            $successCostTime = Arr::get($lineData, 3);
+            $failCount = Arr::get($lineData, 4);
+            $failCostTime = Arr::get($lineData, 5);
+            $codeMapList = json_decode($lineData[6], true);
             if ( ! isset($stData[$timeLine]))
             {
-                $stData[$timeLine] = ['success_count'     => 0,
-                                      'success_cost_time' => 0,
-                                      'fail_count'        => 0,
-                                      'fail_cost_time'    => 0];
+                $stData[$timeLine] = [
+                    'success_count'     => 0,
+                    'success_cost_time' => 0,
+                    'fail_count'        => 0,
+                    'fail_cost_time'    => 0,
+                ];
             }
-            $stData[$timeLine]['success_count'] += $success_count;
-            $stData[$timeLine]['success_cost_time'] += $success_cost_time;
-            $stData[$timeLine]['fail_count'] += $fail_count;
-            $stData[$timeLine]['fail_cost_time'] += $fail_cost_time;
+            $stData[$timeLine]['success_count'] += $successCount;
+            $stData[$timeLine]['success_cost_time'] += $successCostTime;
+            $stData[$timeLine]['fail_count'] += $failCount;
+            $stData[$timeLine]['fail_cost_time'] += $failCostTime;
 
-            if (is_array($tmp_code_map))
+            if (is_array($codeMapList))
             {
-                foreach ($tmp_code_map as $code => $count)
+                foreach ($codeMapList as $code => $count)
                 {
                     if ( ! isset($codeMap[$code]))
                     {
@@ -248,21 +252,20 @@ class StatServer
                 'precent'        => $item['success_count'] + $item['fail_count'] == 0 ? 0 : round(($item['success_count'] * 100 / ($item['success_count'] + $item['fail_count'])), 4),
             ];
         }
-        $time_point = strtotime($date);
+        $timePoint = strtotime($date);
         for ($i = 0; $i < 288; $i++)
         {
-            $data[$time_point] = isset($data[$time_point]) ? $data[$time_point] :
-                [
-                    'time'           => date('Y-m-d H:i:s', $time_point),
-                    'total_count'    => 0,
-                    'total_avg_time' => 0,
-                    'success_count'  => 0,
-                    'suc_avg_time'   => 0,
-                    'fail_count'     => 0,
-                    'fail_avg_time'  => 0,
-                    'precent'        => 100,
-                ];
-            $time_point += 300;
+            $data[$timePoint] = isset($data[$timePoint]) ? $data[$timePoint] : [
+                'time'           => date('Y-m-d H:i:s', $timePoint),
+                'total_count'    => 0,
+                'total_avg_time' => 0,
+                'success_count'  => 0,
+                'suc_avg_time'   => 0,
+                'fail_count'     => 0,
+                'fail_avg_time'  => 0,
+                'precent'        => 100,
+            ];
+            $timePoint += 300;
         }
         ksort($data);
         return $data;

@@ -6,7 +6,7 @@ use tourze\Base\Helper\Arr;
 
 /**
  *
- * struct statisticPortocol
+ * struct statistic协议结构
  * {
  *     unsigned char module_name_len;
  *     unsigned char interface_name_len;
@@ -25,35 +25,27 @@ use tourze\Base\Helper\Arr;
 class Statistic
 {
     /**
-     * 包头长度
-     *
-     * @var integer
+     * @var int 包头长度
      */
     const PACKAGE_FIXED_LENGTH = 17;
 
     /**
-     * udp 包最大长度
-     *
-     * @var integer
+     * @var int udp包最大长度
      */
-    const MAX_UDP_PACKGE_SIZE = 65507;
+    const MAX_UDP_PACKAGE_SIZE = 65507;
 
     /**
-     * char类型能保存的最大数值
-     *
-     * @var integer
+     * @var int char类型能保存的最大数值
      */
     const MAX_CHAR_VALUE = 255;
 
     /**
-     *  usigned short 能保存的最大数值
-     *
-     * @var integer
+     * @var int unsigned short 能保存的最大数值
      */
     const MAX_UNSIGNED_SHORT_VALUE = 65535;
 
     /**
-     * input
+     * 处理输入数据
      *
      * @param string $receiveBuffer
      * @return int
@@ -117,7 +109,7 @@ class Statistic
         // 防止msg过长
         $moduleNameLength = strlen($module);
         $interfaceNameLength = strlen($interface);
-        $availableSize = self::MAX_UDP_PACKGE_SIZE - self::PACKAGE_FIXED_LENGTH - $moduleNameLength - $interfaceNameLength;
+        $availableSize = self::MAX_UDP_PACKAGE_SIZE - self::PACKAGE_FIXED_LENGTH - $moduleNameLength - $interfaceNameLength;
         if (strlen($msg) > $availableSize)
         {
             $msg = substr($msg, 0, $availableSize);
