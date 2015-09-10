@@ -4,8 +4,8 @@ namespace stat;
 
 class Cache
 {
-    public static $statisticDataCache = [];
-    public static $ServerIpList       = [];
+    public static $statDataCache = [];
+    public static $serverIpList       = [];
     public static $modulesDataCache   = [];
     public static $lastFailedIpArray  = [];
     public static $lastSuccessIpArray = [];

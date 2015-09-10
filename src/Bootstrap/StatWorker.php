@@ -2,12 +2,18 @@
 
 namespace stat\Bootstrap;
 
+use stat\StatServer;
 use tourze\Base\Config;
 use tourze\Base\Helper\Arr;
+use tourze\Server\Worker;
 use Workerman\Connection\ConnectionInterface;
-use Workerman\Worker;
 use Workerman\Lib\Timer;
 
+/**
+ * Worker处理
+ *
+ * @package stat\Bootstrap
+ */
 class StatWorker extends Worker
 {
     /**
@@ -15,7 +21,7 @@ class StatWorker extends Worker
      *
      * @var integer
      */
-    const MAX_LOG_BUFFER_SZIE = 1024000;
+    const MAX_LOG_BUFFER_SIZE = 1024000;
 
     /**
      * 多长时间写一次数据到磁盘
@@ -47,38 +53,41 @@ class StatWorker extends Worker
     protected $statisticData = [];
 
     /**
-     * 日志的buffer
-     *
-     * @var string
+     * @var string 日志的buffer
      */
     protected $logBuffer = '';
 
     /**
-     * 放统计数据的目录
-     *
-     * @var string
+     * @var string 放统计数据的目录
      */
-    protected $statisticDir = 'statistic/statistic/';
+    protected $statDir = '';
 
     /**
-     * 存放统计日志的目录
-     *
-     * @var string
+     * @var string 存放统计日志的目录
      */
-    protected $logDir = 'statistic/log/';
+    protected $logDir = '';
 
     /**
-     * 提供统计查询的socket
-     *
-     * @var resource
+     * @var resource 提供统计查询的socket
      */
     protected $providerSocket = null;
 
-    public function __construct($socket_name)
+    /**
+     * {@inheritdoc}
+     */
+    public function __construct($config)
     {
-        parent::__construct($socket_name);
+        parent::__construct($config);
         $this->onWorkerStart = [$this, 'onStart'];
         $this->onMessage = [$this, 'onMessage'];
+        if ( ! $this->statDir)
+        {
+            $this->statDir = StatServer::$statDir;
+        }
+        if ( ! $this->logDir)
+        {
+            $this->logDir = StatServer::$logDir;
+        }
     }
 
     /**
@@ -120,7 +129,7 @@ class StatWorker extends Worker
                 . "\t"
                 . "msg:$msg"
                 . "\n";
-            if (strlen($this->logBuffer) >= self::MAX_LOG_BUFFER_SZIE)
+            if (strlen($this->logBuffer) >= self::MAX_LOG_BUFFER_SIZE)
             {
                 $this->writeLogToDisk();
             }
@@ -132,14 +141,14 @@ class StatWorker extends Worker
      *
      * @param string $module
      * @param string $interface
-     * @param float  $cost_time
+     * @param float  $costTime
      * @param int    $success
      * @param string $ip
      * @param int    $code
      * @param string $msg
      * @return void
      */
-    protected function collectStatistics($module, $interface, $cost_time, $success, $ip, $code, $msg)
+    protected function collectStatistics($module, $interface, $costTime, $success, $ip, $code, $msg)
     {
         // 统计相关信息
         if ( ! isset($this->statisticData[$ip]))
@@ -161,12 +170,12 @@ class StatWorker extends Worker
         $this->statisticData[$ip][$module][$interface]['code'][$code]++;
         if ($success)
         {
-            $this->statisticData[$ip][$module][$interface]['success_cost_time'] += $cost_time;
+            $this->statisticData[$ip][$module][$interface]['success_cost_time'] += $costTime;
             $this->statisticData[$ip][$module][$interface]['success_count']++;
         }
         else
         {
-            $this->statisticData[$ip][$module][$interface]['fail_cost_time'] += $cost_time;
+            $this->statisticData[$ip][$module][$interface]['fail_cost_time'] += $costTime;
             $this->statisticData[$ip][$module][$interface]['fail_count']++;
         }
     }
@@ -180,12 +189,12 @@ class StatWorker extends Worker
     {
         $time = time();
         // 循环将每个ip的统计数据写入磁盘
-        foreach ($this->statisticData as $ip => $mod_if_data)
+        foreach ($this->statisticData as $ip => $modData)
         {
-            foreach ($mod_if_data as $module => $items)
+            foreach ($modData as $module => $items)
             {
                 // 文件夹不存在则创建一个
-                $file_dir = Config::load('statServer')->get('dataPath') . $this->statisticDir . $module;
+                $file_dir = Config::load('statServer')->get('dataPath') . $this->statDir . $module;
                 if ( ! is_dir($file_dir))
                 {
                     umask(0);
@@ -232,7 +241,7 @@ class StatWorker extends Worker
         umask(0);
 
         // 保证存放数据的目录存在和可写
-        $storageDir = Config::load('statServer')->get('dataPath') . $this->statisticDir;
+        $storageDir = Config::load('statServer')->get('dataPath') . $this->statDir;
         if ( ! is_dir($storageDir))
         {
             mkdir($storageDir, 0777, true);

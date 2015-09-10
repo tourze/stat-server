@@ -22,10 +22,16 @@ if ( ! defined('WEB_PATH'))
 Config::addPath(ROOT_PATH . 'config' . DIRECTORY_SEPARATOR);
 View::addPath(ROOT_PATH . 'view' . DIRECTORY_SEPARATOR);
 
-Cache::$ServerIpList = Config::load('statServer')->get('serverIpList');
+Cache::$serverIpList = Config::load('statServer')->get('serverIpList');
 
 // 指定控制器命名空间
 Route::$defaultNamespace = '\\stat\\Controller\\';
 
+Route::set('stat-web', '(<controller>(/<action>(/<id>)))')
+    ->defaults([
+        'controller' => 'Main',
+        'action'     => 'index',
+    ]);
+
 // 创建类别名
-@class_alias('\stat\Service\Protocol\Statistic', '\Workerman\Protocols\Statistic');
+@class_alias('\stat\Protocol\Statistic', '\Workerman\Protocols\Statistic');

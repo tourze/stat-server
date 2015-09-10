@@ -1,3 +1,8 @@
+<?php
+
+use tourze\Route\Route;
+
+?>
 <div class="container">
     <div class="row clearfix">
         <div class="col-md-12 column">
@@ -6,10 +11,10 @@
                     <a href="/">概述</a>
                 </li>
                 <li>
-                    <a href="/?fn=statistic">监控</a>
+                    <a href="<?php echo Route::url('stat-web', ['controller' => 'Statistic']) ?>">监控</a>
                 </li>
                 <li>
-                    <a href="/?fn=logger">日志</a>
+                    <a href="<?php echo Route::url('stat-web', ['controller' => 'Logger']) ?>">日志</a>
                 </li>
                 <li class="disabled">
                     <a href="#">告警</a>
@@ -18,10 +23,10 @@
                     <a href="#" data-toggle="dropdown" class="dropdown-toggle">其它<strong class="caret"></strong></a>
                     <ul class="dropdown-menu">
                         <li>
-                            <a href="/?fn=admin&act=detect_server">探测数据源</a>
+                            <a href="<?php echo Route::url('stat-web', ['controller' => 'Admin', 'action' => 'detect-server']) ?>">探测数据源</a>
                         </li>
                         <li>
-                            <a href="/?fn=admin">数据源管理</a>
+                            <a href="<?php echo Route::url('stat-web', ['controller' => 'Admin']) ?>">数据源管理</a>
                         </li>
                     </ul>
                 </li>
@@ -32,7 +37,7 @@
         <div class="col-md-12 column">
             <ul class="breadcrumb">
                 <li>
-                    <a href="/?fn=admin<?php echo $act == 'detect_server' ? '&act=detect_server' : ''; ?>"><?php echo $act == 'detect_server' ? '数据源探测' : '数据源管理'; ?></a>
+                    <a href="<?php echo Route::url('stat-web', ['controller' => 'Admin']) ?>?<?php echo $act == 'detect-server' ? '&act=detect-server' : ''; ?>"><?php echo $act == 'detect-server' ? '数据源探测' : '数据源管理'; ?></a>
                     <span class="divider">/</span>
                 </li>
                 <li class="active">
@@ -40,7 +45,7 @@
                     {
                         echo '数据源列表';
                     }
-                    elseif ($act == 'detect_server')
+                    elseif ($act == 'detect-server')
                     {
                         echo '探测结果';
                     }
@@ -83,14 +88,14 @@
         <div class="col-md-6 column">
             <?php if ($act != 'add_to_server_list')
             { ?>
-                <form action="/?fn=admin&act=<?php echo $action; ?>" method="post">
+                <form action="<?php echo Route::url('stat-web', ['controller' => 'Admin']) ?>?act=<?php echo $action; ?>" method="post">
                     <div class="form-group">
                         <textarea rows="22" cols="30" name="ip_list"><?php echo $ip_list_str; ?></textarea>
                     </div>
                     <div class="form-group">
                         <div class="col-sm-offset-1 col-sm-11">
                             <button type="submit"
-                                    class="btn btn-default"><?php echo $act == 'detect_server' ? '添加到数据源列表' : '保存' ?></button>
+                                    class="btn btn-default"><?php echo $act == 'detect-server' ? '添加到数据源列表' : '保存' ?></button>
                         </div>
                     </div>
                 </form>
@@ -98,7 +103,7 @@
             else
             { ?>
                 <a type="button" class="btn btn-default" href="/">返回主页</a>&nbsp;<a type="button" class="btn btn-default"
-                                                                                   href="/?fn=admin">继续添加</a>
+                                                                                   href="<?php echo Route::url('stat-web', ['controller' => 'Admin']) ?>">继续添加</a>
             <?php } ?>
         </div>
         <div class="col-md-3 column">

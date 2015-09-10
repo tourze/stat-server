@@ -2,16 +2,31 @@
 
 namespace stat\Controller;
 
-use stat\Base;
+use stat\StatServer;
 use stat\Cache;
 use tourze\Base\Config;
+use tourze\Route\Route;
 use tourze\View\View;
 
+/**
+ * 日志查看控制器
+ *
+ * @package stat\Controller
+ */
 class LoggerController extends BaseController
 {
 
-    public function actionIndex($module, $interface, $date, $start_time, $offset, $count)
+    /**
+     * 缺省动作
+     */
+    public function actionIndex()
     {
+        $module = $this->request->query('module');
+        $interface = $this->request->query('interface');
+        $start_time = $this->request->query('start_time');
+        $offset = $this->request->query('offset');
+        $count = $this->request->query('count');
+
         $module_str = '';
         foreach (Cache::$modulesDataCache as $mod => $interfaces)
         {
@@ -19,51 +34,53 @@ class LoggerController extends BaseController
             {
                 continue;
             }
-            $module_str .= '<li><a href="/?fn=statistic&module=' . $mod . '">' . $mod . '</a></li>';
+            $module_str .= '<li><a href="' . Route::url('stat-web', ['controller' => 'Statistic']) . '?module=' . $mod . '">' . $mod . '</a></li>';
             if ($module == $mod)
             {
                 foreach ($interfaces as $if)
                 {
-                    $module_str .= '<li>&nbsp;&nbsp;<a href="/?fn=statistic&module=' . $mod . '&interface=' . $if . '">' . $if . '</a></li>';
+                    $module_str .= '<li>&nbsp;&nbsp;<a href="' . Route::url('stat-web', ['controller' => 'Statistic']) . '?module=' . $mod . '&interface=' . $if . '">' . $if . '</a></li>';
                 }
             }
         }
 
-        $log_data_arr = $this->getStasticLog($module, $interface, $start_time, $offset, $count);
+        $logDataArray = $this->getStasticLog($module, $interface, $start_time, $offset, $count);
         unset($_GET['fn'], $_GET['ip'], $_GET['offset']);
-        $log_str = '';
-        foreach ($log_data_arr as $address => $log_data)
+        $logStr = '';
+        foreach ($logDataArray as $address => $log_data)
         {
             list($ip, $port) = explode(':', $address);
-            $log_str .= $log_data['data'];
+            $logStr .= $log_data['data'];
             $_GET['ip'][] = $ip;
             $_GET['offset'][] = $log_data['offset'];
         }
-        $log_str = nl2br(str_replace("\n", "\n\n", $log_str));
-        $next_page_url = http_build_query($_GET);
-        $log_str .= "</br><center><a href='/?fn=logger&$next_page_url'>下一页</a></center>";
+        $logStr = nl2br(str_replace("\n", "\n\n", $logStr));
+        $nextPageUrl = http_build_query($_GET);
+        $logStr .= '</br><center><a href="' . Route::url('stat-web', ['controller' => 'Logger']) . '?' . $nextPageUrl . '">下一页</a></center>';
 
-        $this->template->set('content', View::factory('logger/index', get_defined_vars()));
+        $this->template->set('content', View::factory('logger/index', [
+            'logStr' => $logStr,
+        ]));
     }
 
     public function getStasticLog($module, $interface, $start_time, $offset = '', $count = 10)
     {
-        $ip_list = ( ! empty($_GET['ip']) && is_array($_GET['ip'])) ? $_GET['ip'] : Cache::$ServerIpList;
+        $ipList = ( ! empty($_GET['ip']) && is_array($_GET['ip'])) ? $_GET['ip'] : Cache::$serverIpList;
         $offset_list = ( ! empty($_GET['offset']) && is_array($_GET['offset'])) ? $_GET['offset'] : [];
         $port = Config::load('statServer')->get('providerPort');
-        $request_buffer_array = [];
-        foreach ($ip_list as $key => $ip)
+        $requestBufferArray = [];
+        foreach ($ipList as $key => $ip)
         {
             $offset = isset($offset_list[$key]) ? $offset_list[$key] : 0;
-            $request_buffer_array["$ip:$port"] = json_encode(['cmd'        => 'get_log',
-                                                              'module'     => $module,
-                                                              'interface'  => $interface,
-                                                              'start_time' => $start_time,
-                                                              'offset'     => $offset,
-                                                              'count'      => $count]) . "\n";
+            $requestBufferArray["$ip:$port"] = json_encode(['cmd'        => 'get_log',
+                                                            'module'     => $module,
+                                                            'interface'  => $interface,
+                                                            'start_time' => $start_time,
+                                                            'offset'     => $offset,
+                                                            'count'      => $count]) . "\n";
         }
 
-        $read_buffer_array = Base::multiRequest($request_buffer_array);
+        $read_buffer_array = StatServer::multiRequest($requestBufferArray);
         ksort($read_buffer_array);
         foreach ($read_buffer_array as $address => $buf)
         {

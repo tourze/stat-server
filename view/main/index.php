@@ -2,18 +2,22 @@
 
 use tourze\Base\Helper\Arr;
 use tourze\Html\Tag\A;
+use tourze\Route\Route;
 
 /** @var string $interfaceName */
 /** @var string $query */
 /** @var string $errorMsg */
 /** @var string $noticeMsg */
 /** @var array $data */
+/** @var mixed $date */
 /** @var string $successSeriesData */
 /** @var string $failSeriesData */
 /** @var string $successTimeSeriesData */
 /** @var string $failTimeSeriesData */
 /** @var string $codePieData */
 /** @var int $globalRate */
+
+$htmlClass = '';
 
 ?>
 <div class="container">
@@ -24,10 +28,10 @@ use tourze\Html\Tag\A;
                     <a href="/">概述</a>
                 </li>
                 <li>
-                    <a href="/?fn=statistic">监控</a>
+                    <a href="<?php echo Route::url('stat-web', ['controller' => 'Statistic']) ?>">监控</a>
                 </li>
                 <li>
-                    <a href="/?fn=logger">日志</a>
+                    <a href="<?php echo Route::url('stat-web', ['controller' => 'Logger']) ?>">日志</a>
                 </li>
                 <li class="disabled">
                     <a href="#">告警</a>
@@ -36,10 +40,10 @@ use tourze\Html\Tag\A;
                     <a href="#" data-toggle="dropdown" class="dropdown-toggle">其它<strong class="caret"></strong></a>
                     <ul class="dropdown-menu">
                         <li>
-                            <a href="/?fn=admin&act=detect_server">探测数据源</a>
+                            <a href="<?php echo Route::url('stat-web', ['controller' => 'Admin', 'action' => 'detect-server']) ?>">探测数据源</a>
                         </li>
                         <li>
-                            <a href="/?fn=admin">数据源管理</a>
+                            <a href="<?php echo Route::url('stat-web', ['controller' => 'Admin']) ?>">数据源管理</a>
                         </li>
                     </ul>
                 </li>
@@ -322,7 +326,6 @@ use tourze\Html\Tag\A;
                 </thead>
                 <tbody>
                 <?php
-                $htmlClass = '';
                 $firstLine = true;
                 foreach ($data as $item)
                 {

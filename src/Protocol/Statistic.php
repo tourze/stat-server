@@ -1,6 +1,7 @@
 <?php
 
-namespace stat\Service\Protocol;
+namespace stat\Protocol;
+
 use tourze\Base\Helper\Arr;
 
 /**

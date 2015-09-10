@@ -2,28 +2,56 @@
 
 namespace stat;
 
+use tourze\Base\Base;
 use tourze\Base\Config;
 
-class Base
+class StatServer
 {
+
+    /**
+     * @var string 放统计数据的目录
+     */
+    public static $statDir = 'stat/';
+
+    /**
+     * @var string 存放统计日志的目录
+     */
+    public static $logDir = 'log/';
 
     /**
      * 批量请求
      *
-     * @param array $request_buffer_array ['ip:port'=>req_buf, 'ip:port'=>req_buf, ...]
+     * @param array $requestBufferArray ['ip:port'=>req_buf, 'ip:port'=>req_buf, ...]
      * @return mixed multitype:unknown string
      */
-    public static function multiRequest($request_buffer_array)
+    public static function multiRequest($requestBufferArray)
     {
+        Base::getLog()->info(__METHOD__ . ' call multiRequest - start', [
+            'arg' => $requestBufferArray,
+        ]);
+
         Cache::$lastSuccessIpArray = [];
         $clientArray = $sockToIP = $ipList = $sockToAddress = [];
-        foreach ($request_buffer_array as $address => $buffer)
+        foreach ($requestBufferArray as $address => $buffer)
         {
-            list($ip, $port) = explode(':', $address);
+            $temp = explode(':', $address);
+            $ip = array_shift($temp);
+
+            Base::getLog()->info(__METHOD__ . ' loop to get remote buffer', [
+                'ip'      => $ip,
+                'address' => $address,
+                'buffer'  => $buffer,
+            ]);
+
             $ipList[$ip] = $ip;
-            $client = stream_socket_client("tcp://$address", $errno, $errmsg, 1);
+            $client = stream_socket_client("tcp://$address", $errNumber, $errorMsg, 1);
             if ( ! $client)
             {
+                Base::getLog()->error(__METHOD__ . ' create socket failed', [
+                    'address'   => $address,
+                    'errNumber' => $errNumber,
+                    'errMsg'    => $errorMsg,
+                ]);
                 continue;
             }
             $clientArray[$address] = $client;
@@ -33,7 +61,7 @@ class Base
             $sockToAddress[(int) $client] = $address;
         }
         $read = $clientArray;
-        $write = $except = $read_buffer = [];
+        $write = $except = $readBuffer = [];
         $time_start = microtime(true);
         $timeout = 0.99;
         // 轮询处理数据
@@ -53,16 +81,16 @@ class Base
                         }
                         continue;
                     }
-                    if ( ! isset($read_buffer[$address]))
+                    if ( ! isset($readBuffer[$address]))
                     {
-                        $read_buffer[$address] = $buf;
+                        $readBuffer[$address] = $buf;
                     }
                     else
                     {
-                        $read_buffer[$address] .= $buf;
+                        $readBuffer[$address] .= $buf;
                     }
                     // 数据接收完毕
-                    if (($len = strlen($read_buffer[$address])) && $read_buffer[$address][$len - 1] === "\n")
+                    if (($len = strlen($readBuffer[$address])) && $readBuffer[$address][$len - 1] === "\n")
                     {
                         unset($clientArray[$address]);
                     }
@@ -76,37 +104,61 @@ class Base
             $read = $clientArray;
         }
 
-        foreach ($read_buffer as $address => $buf)
+        foreach ($readBuffer as $address => $buf)
         {
-            list($ip, $port) = explode(':', $address);
+            $temp = explode(':', $address);
+            $ip = array_shift($temp);
             Cache::$lastSuccessIpArray[$ip] = $ip;
         }
 
+        Base::getLog()->info(__METHOD__ . ' Cache::$lastFailedIpArray', Cache::$lastFailedIpArray);
+        Base::getLog()->info(__METHOD__ . ' $ipList', $ipList);
         Cache::$lastFailedIpArray = array_diff($ipList, Cache::$lastSuccessIpArray);
 
-        ksort($read_buffer);
+        ksort($readBuffer);
 
-        return $read_buffer;
+        return $readBuffer;
     }
 
+    /**
+     * 准备module参数，并读取数据
+     *
+     * @param string $module
+     * @param string $interface
+     * @param mixed  $date
+     */
     public static function multiRequestStAndModules($module, $interface, $date)
     {
-        Cache::$statisticDataCache['statistic'] = '';
-        $buffer = json_encode(['cmd' => 'get_statistic', 'module' => $module, 'interface' => $interface, 'date' => $date]) . "\n";
-        $ipList = ( ! empty($_GET['ip']) && is_array($_GET['ip'])) ? $_GET['ip'] : Cache::$ServerIpList;
+        Base::getLog()->info(__METHOD__ . ' calling multiRequestStAndModules - start');
+        Cache::$statDataCache['statistic'] = '';
+
+        $buffer = [
+            'cmd'       => 'get_statistic',
+            'module'    => $module,
+            'interface' => $interface,
+            'date'      => $date,
+        ];
+        Base::getLog()->info(__METHOD__ . ' prepare buffer', $buffer);
+        $buffer = json_encode($buffer) . "\n";
+        $ipList = ( ! empty($_GET['ip']) && is_array($_GET['ip'])) ? $_GET['ip'] : Cache::$serverIpList;
         $requestBufferArray = [];
         $port = Config::load('statServer')->get('providerPort');
         foreach ($ipList as $ip)
         {
             $requestBufferArray["$ip:$port"] = $buffer;
         }
+
         $readBufferArray = self::multiRequest($requestBufferArray);
+        Base::getLog()->info(__METHOD__ . ' receive remote buffer', $readBufferArray);
+
         foreach ($readBufferArray as $address => $buf)
         {
-            list($ip, $port) = explode(':', $address);
-            $body_data = json_decode(trim($buf), true);
-            $statistic_data = isset($body_data['statistic']) ? $body_data['statistic'] : '';
-            $modules_data = isset($body_data['modules']) ? $body_data['modules'] : [];
+            $temp = explode(':', $address);
+            $ip = array_shift($temp);
+
+            $bodyData = json_decode(trim($buf), true);
+            $statistic_data = isset($bodyData['statistic']) ? $bodyData['statistic'] : '';
+            $modules_data = isset($bodyData['modules']) ? $bodyData['modules'] : [];
             // 整理modules
             foreach ($modules_data as $mod => $interfaces)
             {
@@ -119,14 +171,24 @@ class Base
                     Cache::$modulesDataCache[$mod][$if] = $if;
                 }
             }
-            Cache::$statisticDataCache['statistic'][$ip] = $statistic_data;
+            Cache::$statDataCache['statistic'][$ip] = $statistic_data;
         }
+
+        Base::getLog()->info(__METHOD__ . ' calling multiRequestStAndModules - end');
     }
 
-    public static function formatSt($str, $date, &$code_map)
+    /**
+     * 格式化日志记录
+     *
+     * @param string $str
+     * @param string $date
+     * @param array  $codeMap
+     * @return array
+     */
+    public static function formatStatLog($str, $date, &$codeMap)
     {
         // time:[success_count:xx,success_cost_time:xx,fail_count:xx,fail_cost_time:xx]
-        $stData = $code_map = [];
+        $stData = $codeMap = [];
         $st_explode = explode("\n", $str);
         // 汇总计算
         foreach ($st_explode as $line)
@@ -146,7 +208,10 @@ class Base
             $tmp_code_map = json_decode($line_data[6], true);
             if ( ! isset($stData[$timeLine]))
             {
-                $stData[$timeLine] = ['success_count' => 0, 'success_cost_time' => 0, 'fail_count' => 0, 'fail_cost_time' => 0];
+                $stData[$timeLine] = ['success_count'     => 0,
+                                      'success_cost_time' => 0,
+                                      'fail_count'        => 0,
+                                      'fail_cost_time'    => 0];
             }
             $stData[$timeLine]['success_count'] += $success_count;
             $stData[$timeLine]['success_cost_time'] += $success_cost_time;
@@ -157,11 +222,11 @@ class Base
             {
                 foreach ($tmp_code_map as $code => $count)
                 {
-                    if ( ! isset($code_map[$code]))
+                    if ( ! isset($codeMap[$code]))
                     {
-                        $code_map[$code] = 0;
+                        $codeMap[$code] = 0;
                     }
-                    $code_map[$code] += $count;
+                    $codeMap[$code] += $count;
                 }
             }
         }
@@ -176,7 +241,7 @@ class Base
                 'time'           => date('Y-m-d H:i:s', $timeLine),
                 'total_count'    => $item['success_count'] + $item['fail_count'],
                 'total_avg_time' => $item['success_count'] + $item['fail_count'] == 0 ? 0 : round(($item['success_cost_time'] + $item['fail_cost_time']) / ($item['success_count'] + $item['fail_count']), 6),
-                'success_count'      => $item['success_count'],
+                'success_count'  => $item['success_count'],
                 'suc_avg_time'   => $item['success_count'] == 0 ? $item['success_count'] : round($item['success_cost_time'] / $item['success_count'], 6),
                 'fail_count'     => $item['fail_count'],
                 'fail_avg_time'  => $item['fail_count'] == 0 ? 0 : round($item['fail_cost_time'] / $item['fail_count'], 6),
@@ -191,7 +256,7 @@ class Base
                     'time'           => date('Y-m-d H:i:s', $time_point),
                     'total_count'    => 0,
                     'total_avg_time' => 0,
-                    'success_count'      => 0,
+                    'success_count'  => 0,
                     'suc_avg_time'   => 0,
                     'fail_count'     => 0,
                     'fail_avg_time'  => 0,

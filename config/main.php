@@ -1,10 +1,35 @@
 <?php
 
+use tourze\Base\Base;
+
 return [
 
-    'server' => [
+    'component' => [
+        'http'    => [
+            'class'  => 'tourze\Server\Component\Http',
+            'params' => [
+            ],
+            'call'   => [
+            ],
+        ],
+        'session' => [
+            'class'  => 'tourze\Server\Component\Session',
+            'params' => [
+            ],
+            'call'   => [
+            ],
+        ],
+        'log'     => [
+            'class'  => 'tourze\Server\Component\Log',
+            'params' => [
+            ],
+            'call'   => [
+            ],
+        ],
+    ],
+    'server'    => [
         // web部分
-        'stat-web' => [
+        'stat-web'      => [
             'count'          => 4, // 打开进程数
             'user'           => '', // 使用什么用户打开
             'reloadable'     => true, // 是否支持平滑重启
@@ -18,21 +43,26 @@ return [
         // Provider
         'stat-provider' => [
             'socketName' => 'Text://0.0.0.0:55858',
+            'initClass'  => '\stat\Bootstrap\StatProvider',
         ],
-        // Worker进程
-        'stat-worker' => [
+        // Worker进程，接受用户提交请求
+        'stat-worker'   => [
             'socketName' => 'Statistic://0.0.0.0:55656',
-            'transport' => 'udp',
+            'initClass'  => '\stat\Bootstrap\StatWorker',
+            'transport'  => 'udp',
         ],
         // Finder 接收UDP广播，用于发现内网中其他其他的统计服务
-        'stat-finder' => [
+        'stat-finder'   => [
             'socketName' => 'Text://0.0.0.0:55858',
-            'transport' => 'udp',
-            'onMessage' => function ($connection, $data)
+            'transport'  => 'udp',
+            'onMessage'  => function ($connection, $data)
             {
+                Base::getLog()->info(__METHOD__ . ' handle message', $data);
+
                 $data = json_decode($data, true);
-                if (empty($data))
+                if (empty($data) || ! isset($data['cmd']))
                 {
+                    Base::getLog()->info(__METHOD__ . ' no cmd param, or the data format is wrong', $data);
                     return false;
                 }
 
@@ -42,9 +72,10 @@ return [
                     return false;
                 }
 
+                Base::getLog()->info(__METHOD__ . ' response ok');
                 /** @var \Workerman\Connection\ConnectionInterface $connection */
                 return $connection->send(json_encode(['result' => 'ok']));
-            }
+            },
         ],
     ],
 

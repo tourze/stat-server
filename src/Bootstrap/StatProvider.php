@@ -2,38 +2,36 @@
 
 namespace stat\Bootstrap;
 
+use stat\StatServer;
 use tourze\Base\Config;
 use tourze\Base\Helper\Arr;
+use tourze\Server\Worker;
 use Workerman\Connection\ConnectionInterface;
-use Workerman\Worker;
 
+/**
+ * 数据提供者
+ *
+ * @package stat\Bootstrap
+ */
 class StatProvider extends Worker
 {
     /**
-     *  最大日志buffer，大于这个值就写磁盘
-     *
-     * @var integer
+     * @var int 最大日志buffer，大于这个值就写磁盘
      */
-    const MAX_LOG_BUFFER_SZIE = 1024000;
+    const MAX_LOG_BUFFER_SIZE = 1024000;
 
     /**
-     * 多长时间写一次数据到磁盘
-     *
-     * @var integer
+     * @var int 多长时间写一次数据到磁盘
      */
     const WRITE_PERIOD_LENGTH = 60;
 
     /**
-     * 多长时间清理一次老的磁盘数据
-     *
-     * @var integer
+     * @var int 多长时间清理一次老的磁盘数据
      */
-    const CLEAR_PERIOD_LENGTH = 86400;
+    const CLEAR_PERIOD_LENGTH = 604800;
 
     /**
-     * 数据多长时间过期
-     *
-     * @var integer
+     * @var int 数据多长时间过期
      */
     const EXPIRED_TIME = 1296000;
 
@@ -46,25 +44,19 @@ class StatProvider extends Worker
     protected $statisticData = [];
 
     /**
-     * 日志的buffer
-     *
-     * @var string
+     * @var string 日志的buffer
      */
     protected $logBuffer = '';
 
     /**
-     * 放统计数据的目录
-     *
-     * @var string
+     * @var string 放统计数据的目录
      */
-    protected $statisticDir = 'statistic/statistic/';
+    protected $statDir = '';
 
     /**
-     * 存放统计日志的目录
-     *
-     * @var string
+     * @var string 存放统计日志的目录
      */
-    protected $logDir = 'statistic/log/';
+    protected $logDir = '';
 
     /**
      * 用于接收广播的udp socket
@@ -74,14 +66,20 @@ class StatProvider extends Worker
     protected $broadcastSocket = null;
 
     /**
-     * construt
-     *
-     * @param string $socket_name
+     * {@inheritdoc}
      */
-    public function __construct($socket_name)
+    public function __construct($config)
     {
-        parent::__construct($socket_name);
+        parent::__construct($config);
         $this->onMessage = [$this, 'onMessage'];
+        if ( ! $this->statDir)
+        {
+            $this->statDir = StatServer::$statDir;
+        }
+        if ( ! $this->logDir)
+        {
+            $this->logDir = StatServer::$logDir;
+        }
     }
 
     /**
@@ -130,7 +128,7 @@ class StatProvider extends Worker
      */
     public function getModules($currentModule = '')
     {
-        $storageDir = Config::load('statServer')->get('dataPath') . $this->statisticDir;
+        $storageDir = Config::load('statServer')->get('dataPath') . $this->statDir;
 
         $result = [];
         foreach (glob($storageDir . "/*", GLOB_ONLYDIR) as $moduleFile)
@@ -174,7 +172,7 @@ class StatProvider extends Worker
             return '';
         }
         // log文件
-        $logFile = Config::load('statServer')->get('dataPath') . $this->statisticDir . "{$module}/{$interface}.{$date}";
+        $logFile = Config::load('statServer')->get('dataPath') . $this->statDir . "{$module}/{$interface}.{$date}";
 
         $handle = @fopen($logFile, 'r');
         if ( ! $handle)

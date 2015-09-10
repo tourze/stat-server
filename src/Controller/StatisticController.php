@@ -2,52 +2,66 @@
 
 namespace stat\Controller;
 
-use stat\Base as StatBase;
+use stat\StatServer as StatBase;
 use stat\Cache;
 use tourze\Base\Config;
+use tourze\Route\Route;
+use tourze\View\View;
 
+/**
+ * 监控控制器
+ *
+ * @package stat\Controller
+ */
 class StatisticController extends BaseController
 {
 
-    public function run($module, $interface, $date, $start_time, $offset)
+    /**
+     * 默认动作
+     */
+    public function actionIndex()
     {
-        $err_msg = '';
+        $module = $this->request->query('module');
+        $interface = $this->request->query('interface');
+        $date = $this->request->query('date');
+
+        $errorMsg = '';
         $today = date('Y-m-d');
         $time_now = time();
         StatBase::multiRequestStAndModules($module, $interface, $date);
-        $all_st_str = '';
-        if (is_array(Cache::$statisticDataCache['statistic']))
+        $allStr = '';
+        if (is_array(Cache::$statDataCache['statistic']))
         {
-            foreach (Cache::$statisticDataCache['statistic'] as $ip => $st_str)
+            foreach (Cache::$statDataCache['statistic'] as $ip => $st_str)
             {
-                $all_st_str .= $st_str;
+                $allStr .= $st_str;
             }
         }
 
         $code_map = [];
-        $data = StatBase::formatSt($all_st_str, $date, $code_map);
-        $interface_name = "$module::$interface";
-        $success_series_data = $fail_series_data = $success_time_series_data = $fail_time_series_data = [];
+        $data = StatBase::formatStatLog($allStr, $date, $code_map);
+        $interfaceName = "$module::$interface";
+        $successSeriesData = $failSeriesData = $successTimeSeriesData = $failTimeSeriesData = [];
         $total_count = $fail_count = 0;
         foreach ($data as $time_point => $item)
         {
             if ($item['total_count'])
             {
-                $success_series_data[] = "[" . ($time_point * 1000) . ",{$item['total_count']}]";
+                $successSeriesData[] = "[" . ($time_point * 1000) . ",{$item['total_count']}]";
                 $total_count += $item['total_count'];
             }
-            $fail_series_data[] = "[" . ($time_point * 1000) . ",{$item['fail_count']}]";
+            $failSeriesData[] = "[" . ($time_point * 1000) . ",{$item['fail_count']}]";
             $fail_count += $item['fail_count'];
             if ($item['total_avg_time'])
             {
-                $success_time_series_data[] = "[" . ($time_point * 1000) . ",{$item['total_avg_time']}]";
+                $successTimeSeriesData[] = "[" . ($time_point * 1000) . ",{$item['total_avg_time']}]";
             }
-            $fail_time_series_data[] = "[" . ($time_point * 1000) . ",{$item['fail_avg_time']}]";
+            $failTimeSeriesData[] = "[" . ($time_point * 1000) . ",{$item['fail_avg_time']}]";
         }
-        $success_series_data = implode(',', $success_series_data);
-        $fail_series_data = implode(',', $fail_series_data);
-        $success_time_series_data = implode(',', $success_time_series_data);
-        $fail_time_series_data = implode(',', $fail_time_series_data);
+        $successSeriesData = implode(',', $successSeriesData);
+        $failSeriesData = implode(',', $failSeriesData);
+        $successTimeSeriesData = implode(',', $successTimeSeriesData);
+        $failTimeSeriesData = implode(',', $failTimeSeriesData);
 
         unset($_GET['start_time'], $_GET['end_time'], $_GET['date'], $_GET['fn']);
         $query = http_build_query($_GET);
@@ -61,7 +75,7 @@ class StatisticController extends BaseController
             }
         }
 
-        $table_data = $html_class = '';
+        $tableData = $html_class = '';
         if ($data)
         {
             $first_line = true;
@@ -92,13 +106,13 @@ class StatisticController extends BaseController
                 {
                     $html_class = 'class="warning"';
                 }
-                $table_data .= "\n<tr $html_class>
+                $tableData .= "\n<tr $html_class>
             <td>{$item['time']}</td>
             <td>{$item['total_count']}</td>
             <td> {$item['total_avg_time']}</td>
             <td>{$item['success_count']}</td>
             <td>{$item['suc_avg_time']}</td>
-            <td>" . ($item['fail_count'] > 0 ? ("<a href='/?fn=logger&$query&start_time=" . (strtotime($item['time']) - 300) . "&end_time=" . (strtotime($item['time'])) . "'>{$item['fail_count']}</a>") : $item['fail_count']) . "</td>
+            <td>" . ($item['fail_count'] > 0 ? ("<a href='" . Route::url('stat-web', ['controller' => 'Logger']) . "?$query&start_time=" . (strtotime($item['time']) - 300) . "&end_time=" . (strtotime($item['time'])) . "'>{$item['fail_count']}</a>") : $item['fail_count']) . "</td>
             <td>{$item['fail_avg_time']}</td>
             <td>{$item['precent']}%</td>
             </tr>
@@ -107,51 +121,62 @@ class StatisticController extends BaseController
         }
 
         // date btn
-        $date_btn_str = '';
+        $dateBtnStr = '';
         for ($i = 13; $i >= 1; $i--)
         {
             $the_time = strtotime("-$i day");
             $the_date = date('Y-m-d', $the_time);
             $html_the_date = $date == $the_date ? "<b>$the_date</b>" : $the_date;
-            $date_btn_str .= '<a href="/?fn=statistic&date=' . "$the_date&$query" . '" class="btn ' . $html_class . '" type="button">' . $html_the_date . '</a>';
+            $dateBtnStr .= '<a href="' . Route::url('stat-web', ['controller' => 'Statistic']) . '?date=' . "$the_date&$query" . '" class="btn ' . $html_class . '" type="button">' . $html_the_date . '</a>';
             if ($i == 7)
             {
-                $date_btn_str .= '</br>';
+                $dateBtnStr .= '</br>';
             }
         }
         $the_date = date('Y-m-d');
         $html_the_date = $date == $the_date ? "<b>$the_date</b>" : $the_date;
-        $date_btn_str .= '<a href="/?date=' . "$the_date&$query" . '" class="btn" type="button">' . $html_the_date . '</a>';
+        $dateBtnStr .= '<a href="' . Route::url('stat-web', ['controller' => 'Statistic']) . '?date=' . "$the_date&$query" . '" class="btn" type="button">' . $html_the_date . '</a>';
 
-        $module_str = '';
+        $moduleStr = '';
         foreach (Cache::$modulesDataCache as $mod => $interfaces)
         {
             if ($mod == 'WorkerMan')
             {
                 continue;
             }
-            $module_str .= '<li><a href="/?fn=statistic&module=' . $mod . '">' . $mod . '</a></li>';
+            $moduleStr .= '<li><a href="' . Route::url('stat-web', ['controller' => 'Statistic']) . '?module=' . $mod . '">' . $mod . '</a></li>';
             if ($module == $mod)
             {
                 foreach ($interfaces as $if)
                 {
-                    $module_str .= '<li>&nbsp;&nbsp;<a href="/?fn=statistic&module=' . $mod . '&interface=' . $if . '">' . $if . '</a></li>';
+                    $moduleStr .= '<li>&nbsp;&nbsp;<a href="' . Route::url('stat-web', ['controller' => 'Statistic']) . '?module=' . $mod . '&interface=' . $if . '">' . $if . '</a></li>';
                 }
             }
         }
 
         if (Cache::$lastFailedIpArray)
         {
-            $err_msg = '<strong>无法从以下数据源获取数据:</strong>';
+            $errorMsg = '<strong>无法从以下数据源获取数据:</strong>';
             foreach (Cache::$lastFailedIpArray as $ip)
             {
-                $err_msg .= $ip . '::' . Config::load('statServer')->get('providerPort') . '&nbsp;';
+                $errorMsg .= $ip . '::' . Config::load('statServer')->get('providerPort') . '&nbsp;';
             }
         }
 
-        include ROOT_PATH . '/view/header.tpl.php';
-        include ROOT_PATH . '/view/statistic.tpl.php';
-        include ROOT_PATH . '/view/footer.tpl.php';
+        $this->template->set('content', View::factory('statistic/index', [
+            'errorMsg'              => $errorMsg,
+            'date'                  => $date,
+            'module'                => $module,
+            'interface'             => $interface,
+            'interfaceName'         => $interfaceName,
+            'moduleStr'             => $moduleStr,
+            'successSeriesData'     => $successSeriesData,
+            'failSeriesData'        => $failSeriesData,
+            'successTimeSeriesData' => $successTimeSeriesData,
+            'failTimeSeriesData'    => $failTimeSeriesData,
+            'tableData'             => $tableData,
+            'dateBtnStr'            => $dateBtnStr,
+        ]));
     }
 
 }

@@ -14,7 +14,7 @@ class AdminController extends BaseController
         $action = 'save_server_list';
         switch ($act)
         {
-            case 'detect_server':
+            case 'detect-server':
                 // 创建udp socket
                 $socket = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
                 socket_set_option($socket, SOL_SOCKET, SO_BROADCAST, 1);
@@ -42,7 +42,7 @@ class AdminController extends BaseController
                 $count = 0;
                 foreach ($ip_list as $ip)
                 {
-                    if ( ! isset(Cache::$ServerIpList[$ip]))
+                    if ( ! isset(Cache::$serverIpList[$ip]))
                     {
                         $ip_list_str .= $ip . "\r\n";
                         $count++;
@@ -65,12 +65,12 @@ class AdminController extends BaseController
                         $ip = trim($ip);
                         if (false !== ip2long($ip))
                         {
-                            Cache::$ServerIpList[$ip] = $ip;
+                            Cache::$serverIpList[$ip] = $ip;
                         }
                     }
                 }
                 $suc_msg = "添加成功";
-                foreach (Cache::$ServerIpList as $ip)
+                foreach (Cache::$serverIpList as $ip)
                 {
                     $ip_list_str .= $ip . "\r\n";
                 }
@@ -82,7 +82,7 @@ class AdminController extends BaseController
                     $err_msg = "保存的ip列表为空";
                     break;
                 }
-                Cache::$ServerIpList = [];
+                Cache::$serverIpList = [];
                 $ip_list = explode("\n", $_POST['ip_list']);
                 if ($ip_list)
                 {
@@ -91,19 +91,19 @@ class AdminController extends BaseController
                         $ip = trim($ip);
                         if (false !== ip2long($ip))
                         {
-                            Cache::$ServerIpList[$ip] = $ip;
+                            Cache::$serverIpList[$ip] = $ip;
                         }
                     }
                 }
                 $suc_msg = "保存成功";
-                foreach (Cache::$ServerIpList as $ip)
+                foreach (Cache::$serverIpList as $ip)
                 {
                     $ip_list_str .= $ip . "\r\n";
                 }
                 $this->saveServerIpListToCache();
                 break;
             default:
-                foreach (Cache::$ServerIpList as $ip)
+                foreach (Cache::$serverIpList as $ip)
                 {
                     $ip_list_str .= $ip . "\r\n";
                 }
@@ -118,7 +118,7 @@ class AdminController extends BaseController
         {
             unlink($php_file);
         }
-        file_put_contents(Config::load('statServer')->get('configCachePath') . time() . '.iplist.cache.php', "<?php\n\\stat\\Cache::\$ServerIpList=" . var_export(Cache::$ServerIpList, true) . ';');
+        file_put_contents(Config::load('statServer')->get('configCachePath') . time() . '.iplist.cache.php', "<?php\n\\stat\\Cache::\$ServerIpList=" . var_export(Cache::$serverIpList, true) . ';');
     }
 
 }

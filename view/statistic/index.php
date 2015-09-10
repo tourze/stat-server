@@ -1,3 +1,21 @@
+<?php
+
+use tourze\Route\Route;
+
+/** @var string $date */
+/** @var string $module */
+/** @var string $moduleStr */
+/** @var string $interface */
+/** @var string $interfaceName */
+/** @var string $errorMsg */
+/** @var string $successSeriesData */
+/** @var string $failSeriesData */
+/** @var string $successTimeSeriesData */
+/** @var string $failTimeSeriesData */
+/** @var string $tableData */
+/** @var string $dateBtnStr */
+
+?>
 <div class="container">
     <div class="row clearfix">
         <div class="col-md-12 column">
@@ -6,10 +24,10 @@
                     <a href="/">概述</a>
                 </li>
                 <li class="active">
-                    <a href="/?fn=statistic">监控</a>
+                    <a href="<?php echo Route::url('stat-web', ['controller' => 'Statistic']) ?>">监控</a>
                 </li>
                 <li>
-                    <a href="/?fn=logger">日志</a>
+                    <a href="<?php echo Route::url('stat-web', ['controller' => 'Logger']) ?>">日志</a>
                 </li>
                 <li class="disabled">
                     <a href="#">告警</a>
@@ -18,10 +36,10 @@
                     <a href="#" data-toggle="dropdown" class="dropdown-toggle">其它<strong class="caret"></strong></a>
                     <ul class="dropdown-menu">
                         <li>
-                            <a href="/?fn=admin&act=detect_server">探测数据源</a>
+                            <a href="<?php echo Route::url('stat-web', ['controller' => 'Admin', 'action' => 'detect-server']) ?>">探测数据源</a>
                         </li>
                         <li>
-                            <a href="/?fn=admin">数据源管理</a>
+                            <a href="<?php echo Route::url('stat-web', ['controller' => 'Admin']) ?>">数据源管理</a>
                         </li>
                     </ul>
                 </li>
@@ -30,21 +48,22 @@
     </div>
     <div class="row clearfix">
         <div class="col-md-3 column">
-            <ul><?php echo $module_str; ?></ul>
+            <ul><?php echo $moduleStr; ?></ul>
         </div>
         <div class="col-md-9 column">
-            <?php if ($err_msg)
+            <?php 
+            if ($errorMsg)
             { ?>
                 <div class="alert alert-dismissable alert-danger">
                     <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-                    <strong><?php echo $err_msg; ?></strong>
+                    <strong><?php echo $errorMsg; ?></strong>
                 </div>
             <?php } ?>
             <?php if ($module && $interface)
             { ?>
                 <div class="row clearfix">
                     <div class="col-md-12 column text-center">
-                        <?php echo $date_btn_str; ?>
+                        <?php echo $dateBtnStr; ?>
                     </div>
                 </div>
                 <div class="row clearfix">
@@ -68,7 +87,7 @@
                             type: 'spline'
                         },
                         title: {
-                            text: '<?php echo "$date $interface_name";?>  请求量曲线'
+                            text: '<?php echo "$date $interfaceName";?>  请求量曲线'
                         },
                         subtitle: {
                             text: ''
@@ -99,7 +118,7 @@
                         series: [{
                             name: '成功曲线',
                             data: [
-                                <?php echo $success_series_data;?>
+                                <?php echo $successSeriesData;?>
                             ],
                             lineWidth: 2,
                             marker: {
@@ -111,7 +130,7 @@
                             {
                                 name: '失败曲线',
                                 data: [
-                                    <?php echo $fail_series_data;?>
+                                    <?php echo $failSeriesData;?>
                                 ],
                                 lineWidth: 2,
                                 marker: {
@@ -126,7 +145,7 @@
                             type: 'spline'
                         },
                         title: {
-                            text: '<?php echo "$date $interface_name";?>  请求耗时曲线'
+                            text: '<?php echo "$date $interfaceName";?>  请求耗时曲线'
                         },
                         subtitle: {
                             text: ''
@@ -157,7 +176,7 @@
                         series: [{
                             name: '成功曲线',
                             data: [
-                                <?php echo $success_time_series_data;?>
+                                <?php echo $successTimeSeriesData;?>
                             ],
                             lineWidth: 2,
                             marker: {
@@ -168,7 +187,7 @@
                             {
                                 name: '失败曲线',
                                 data: [
-                                    <?php echo $fail_time_series_data;?>
+                                    <?php echo $failTimeSeriesData;?>
                                 ],
                                 lineWidth: 2,
                                 marker: {
@@ -194,7 +213,7 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <?php echo $table_data; ?>
+                    <?php echo $tableData; ?>
                     </tbody>
                 </table>
             <?php } ?>
