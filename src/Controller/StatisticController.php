@@ -1,19 +1,17 @@
 <?php
 
-namespace stat\Web;
+namespace stat\Controller;
 
 use stat\Base as StatBase;
 use stat\Cache;
 use tourze\Base\Config;
 
-class Main extends Base
+class StatisticController extends BaseController
 {
 
     public function run($module, $interface, $date, $start_time, $offset)
     {
-        $err_msg = $notice_msg = '';
-        $module = 'WorkerMan';
-        $interface = 'Statistics';
+        $err_msg = '';
         $today = date('Y-m-d');
         $time_now = time();
         StatBase::multiRequestStAndModules($module, $interface, $date);
@@ -28,7 +26,7 @@ class Main extends Base
 
         $code_map = [];
         $data = StatBase::formatSt($all_st_str, $date, $code_map);
-        $interface_name = '整体';
+        $interface_name = "$module::$interface";
         $success_series_data = $fail_series_data = $success_time_series_data = $fail_time_series_data = [];
         $total_count = $fail_count = 0;
         foreach ($data as $time_point => $item)
@@ -51,26 +49,6 @@ class Main extends Base
         $success_time_series_data = implode(',', $success_time_series_data);
         $fail_time_series_data = implode(',', $fail_time_series_data);
 
-        // 总体成功率
-        $global_rate = $total_count ? round((($total_count - $fail_count) / $total_count) * 100, 4) : 100;
-        // 返回码分布
-        $code_pie_data = '';
-        $code_pie_array = [];
-        unset($code_map[0]);
-        if (empty($code_map))
-        {
-            $code_map[0] = $total_count > 0 ? $total_count : 1;
-        }
-        if (is_array($code_map))
-        {
-            $total_item_count = array_sum($code_map);
-            foreach ($code_map as $code => $count)
-            {
-                $code_pie_array[] = "[\"$code:{$count}个\", " . round($count * 100 / $total_item_count, 4) . "]";
-            }
-            $code_pie_data = implode(',', $code_pie_array);
-        }
-
         unset($_GET['start_time'], $_GET['end_time'], $_GET['date'], $_GET['fn']);
         $query = http_build_query($_GET);
 
@@ -83,8 +61,7 @@ class Main extends Base
             }
         }
 
-        $table_data = '';
-        $html_class = '';
+        $table_data = $html_class = '';
         if ($data)
         {
             $first_line = true;
@@ -116,15 +93,15 @@ class Main extends Base
                     $html_class = 'class="warning"';
                 }
                 $table_data .= "\n<tr $html_class>
-                       <td>{$item['time']}</td>
-                       <td>{$item['total_count']}</td>
-                        <td> {$item['total_avg_time']}</td>
-                        <td>{$item['success_count']}</td>
-                        <td>{$item['suc_avg_time']}</td>
-                        <td>" . ($item['fail_count'] > 0 ? ("<a href='/?fn=logger&$query&start_time=" . (strtotime($item['time']) - 300) . "&end_time=" . (strtotime($item['time'])) . "'>{$item['fail_count']}</a>") : $item['fail_count']) . "</td>
-                        <td>{$item['fail_avg_time']}</td>
-                        <td>{$item['precent']}%</td>
-                    </tr>
+            <td>{$item['time']}</td>
+            <td>{$item['total_count']}</td>
+            <td> {$item['total_avg_time']}</td>
+            <td>{$item['success_count']}</td>
+            <td>{$item['suc_avg_time']}</td>
+            <td>" . ($item['fail_count'] > 0 ? ("<a href='/?fn=logger&$query&start_time=" . (strtotime($item['time']) - 300) . "&end_time=" . (strtotime($item['time'])) . "'>{$item['fail_count']}</a>") : $item['fail_count']) . "</td>
+            <td>{$item['fail_avg_time']}</td>
+            <td>{$item['precent']}%</td>
+            </tr>
             ";
             }
         }
@@ -136,7 +113,7 @@ class Main extends Base
             $the_time = strtotime("-$i day");
             $the_date = date('Y-m-d', $the_time);
             $html_the_date = $date == $the_date ? "<b>$the_date</b>" : $the_date;
-            $date_btn_str .= '<a href="/?date=' . "$the_date&$query" . '" class="btn ' . $html_class . '" type="button">' . $html_the_date . '</a>';
+            $date_btn_str .= '<a href="/?fn=statistic&date=' . "$the_date&$query" . '" class="btn ' . $html_class . '" type="button">' . $html_the_date . '</a>';
             if ($i == 7)
             {
                 $date_btn_str .= '</br>';
@@ -145,6 +122,23 @@ class Main extends Base
         $the_date = date('Y-m-d');
         $html_the_date = $date == $the_date ? "<b>$the_date</b>" : $the_date;
         $date_btn_str .= '<a href="/?date=' . "$the_date&$query" . '" class="btn" type="button">' . $html_the_date . '</a>';
+
+        $module_str = '';
+        foreach (Cache::$modulesDataCache as $mod => $interfaces)
+        {
+            if ($mod == 'WorkerMan')
+            {
+                continue;
+            }
+            $module_str .= '<li><a href="/?fn=statistic&module=' . $mod . '">' . $mod . '</a></li>';
+            if ($module == $mod)
+            {
+                foreach ($interfaces as $if)
+                {
+                    $module_str .= '<li>&nbsp;&nbsp;<a href="/?fn=statistic&module=' . $mod . '&interface=' . $if . '">' . $if . '</a></li>';
+                }
+            }
+        }
 
         if (Cache::$lastFailedIpArray)
         {
@@ -155,16 +149,9 @@ class Main extends Base
             }
         }
 
-        if (empty(Cache::$ServerIpList))
-        {
-            $notice_msg = <<<EOT
-<h4>数据源为空</h4>
-您可以 <a href="/?fn=admin&act=detect_server" class="btn" type="button"><strong>探测数据源</strong></a>或者<a href="/?fn=admin" class="btn" type="button"><strong>添加数据源</strong></a>
-EOT;
-        }
-
         include ROOT_PATH . '/view/header.tpl.php';
-        include ROOT_PATH . '/view/main.tpl.php';
+        include ROOT_PATH . '/view/statistic.tpl.php';
         include ROOT_PATH . '/view/footer.tpl.php';
     }
+
 }

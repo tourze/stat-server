@@ -10,6 +10,8 @@
   "minimum-stability": "stable",
   "require": {
     "tourze/base": "^1.0",
+    "tourze/bootstrap": "^1.0",
+    "tourze/controller": "^1.0",
     "tourze/view": "^1.0",
     "tourze/server": "^1.0",
     "tourze/tourze": "dev-master"

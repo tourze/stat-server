@@ -1,13 +1,13 @@
 <?php
 
-namespace stat\Web;
+namespace stat\Controller;
 
 use stat\Cache;
 use tourze\Base\Config;
 
-class Admin extends Base
+class AdminController extends BaseController
 {
-    public function run()
+    public function actionIndex()
     {
         $act = isset($_GET['act']) ? $_GET['act'] : 'home';
         $err_msg = $notice_msg = $suc_msg = $ip_list_str = '';
@@ -109,11 +109,8 @@ class Admin extends Base
                 }
         }
 
-        include ROOT_PATH . '/view/header.tpl.php';
-        include ROOT_PATH . '/view/admin.tpl.php';
-        include ROOT_PATH . '/view/footer.tpl.php';
+        $this->template->set('admin/index', get_defined_vars());;
     }
-
 
     public function saveServerIpListToCache()
     {

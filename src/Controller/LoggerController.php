@@ -1,15 +1,16 @@
 <?php
 
-namespace stat\Web;
+namespace stat\Controller;
 
 use stat\Base;
 use stat\Cache;
 use tourze\Base\Config;
+use tourze\View\View;
 
-class Logger extends Base
+class LoggerController extends BaseController
 {
 
-    public function run($module, $interface, $date, $start_time, $offset, $count)
+    public function actionIndex($module, $interface, $date, $start_time, $offset, $count)
     {
         $module_str = '';
         foreach (Cache::$modulesDataCache as $mod => $interfaces)
@@ -42,9 +43,7 @@ class Logger extends Base
         $next_page_url = http_build_query($_GET);
         $log_str .= "</br><center><a href='/?fn=logger&$next_page_url'>下一页</a></center>";
 
-        include ROOT_PATH . '/view/header.tpl.php';
-        include ROOT_PATH . '/view/log.tpl.php';
-        include ROOT_PATH . '/view/footer.tpl.php';
+        $this->template->set('content', View::factory('logger/index', get_defined_vars()));
     }
 
     public function getStasticLog($module, $interface, $start_time, $offset = '', $count = 10)
@@ -56,7 +55,12 @@ class Logger extends Base
         foreach ($ip_list as $key => $ip)
         {
             $offset = isset($offset_list[$key]) ? $offset_list[$key] : 0;
-            $request_buffer_array["$ip:$port"] = json_encode(['cmd' => 'get_log', 'module' => $module, 'interface' => $interface, 'start_time' => $start_time, 'offset' => $offset, 'count' => $count]) . "\n";
+            $request_buffer_array["$ip:$port"] = json_encode(['cmd'        => 'get_log',
+                                                              'module'     => $module,
+                                                              'interface'  => $interface,
+                                                              'start_time' => $start_time,
+                                                              'offset'     => $offset,
+                                                              'count'      => $count]) . "\n";
         }
 
         $read_buffer_array = Base::multiRequest($request_buffer_array);
