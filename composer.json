@@ -1,20 +1,21 @@
 {
-  "name": "ywisax/com.tourze.stat",
+  "name": "tourze/com.tourze.stat",
   "description": "数据统计中心",
   "authors": [
     {
-      "name": "ywisax",
-      "email": "25803471@qq.com"
+      "name": "tourze",
+      "email": "dev@tourze.com"
     }
   ],
   "minimum-stability": "stable",
   "require": {
-    "tourze/core": "dev-master",
-    "tourze/tourze": "dev-master",
-    "workerman/workerman": "^3.1"
+    "tourze/base": "^1.0",
+    "tourze/view": "^1.0",
+    "tourze/server": "^1.0",
+    "tourze/tourze": "dev-master"
   },
   "autoload": {
-    "psr-0": {
+    "psr-4": {
       "stat\\": "src/"
     }
   },
@@ -22,10 +23,6 @@
     {
       "type": "git",
       "url": "https://git.oschina.net/ywisax/com.tourze.php.tourze.git"
-    },
-    {
-      "type": "git",
-      "url": "https://git.oschina.net/ywisax/com.tourze.php.core.git"
     },
     {
       "type": "composer",
