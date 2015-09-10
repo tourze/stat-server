@@ -5,13 +5,18 @@ namespace stat\Controller;
 use stat\Cache;
 use tourze\Base\Config;
 
+/**
+ * 管理控制器
+ *
+ * @package stat\Controller
+ */
 class AdminController extends BaseController
 {
     public function actionIndex()
     {
         $act = isset($_GET['act']) ? $_GET['act'] : 'home';
-        $err_msg = $notice_msg = $suc_msg = $ip_list_str = '';
-        $action = 'save_server_list';
+        $errorMsg = $noticeMsg = $successMsg = $ipListStr = '';
+        $action = 'save-server-list';
         switch ($act)
         {
             case 'detect-server':
@@ -24,7 +29,7 @@ class AdminController extends BaseController
                 // 超时相关
                 $time_start = microtime(true);
                 $global_timeout = 1;
-                $ip_list = [];
+                $ipList = [];
                 $recv_timeout = ['sec' => 0, 'usec' => 8000];
                 socket_set_option($socket, SOL_SOCKET, SO_RCVTIMEO, $recv_timeout);
 
@@ -34,33 +39,33 @@ class AdminController extends BaseController
                     $buf = $host = $port = '';
                     if (@socket_recvfrom($socket, $buf, 65535, 0, $host, $port))
                     {
-                        $ip_list[$host] = $host;
+                        $ipList[$host] = $host;
                     }
                 }
 
                 // 过滤掉已经保存的ip
                 $count = 0;
-                foreach ($ip_list as $ip)
+                foreach ($ipList as $ip)
                 {
                     if ( ! isset(Cache::$serverIpList[$ip]))
                     {
-                        $ip_list_str .= $ip . "\r\n";
+                        $ipListStr .= $ip . "\r\n";
                         $count++;
                     }
                 }
-                $action = 'add_to_server_list';
-                $notice_msg = "探测到{$count}个新数据源";
+                $action = 'add-to-server-list';
+                $noticeMsg = "探测到{$count}个新数据源";
                 break;
-            case 'add_to_server_list':
+            case 'add-to-server-list':
                 if (empty($_POST['ip_list']))
                 {
-                    $err_msg = "保存的ip列表为空";
+                    $errorMsg = "保存的ip列表为空";
                     break;
                 }
-                $ip_list = explode("\n", $_POST['ip_list']);
-                if ($ip_list)
+                $ipList = explode("\n", $_POST['ip_list']);
+                if ($ipList)
                 {
-                    foreach ($ip_list as $ip)
+                    foreach ($ipList as $ip)
                     {
                         $ip = trim($ip);
                         if (false !== ip2long($ip))
@@ -69,24 +74,23 @@ class AdminController extends BaseController
                         }
                     }
                 }
-                $suc_msg = "添加成功";
+                $successMsg = "添加成功";
                 foreach (Cache::$serverIpList as $ip)
                 {
-                    $ip_list_str .= $ip . "\r\n";
+                    $ipListStr .= $ip . "\r\n";
                 }
-                $this->saveServerIpListToCache();
                 break;
-            case 'save_server_list':
+            case 'save-server-list':
                 if (empty($_POST['ip_list']))
                 {
-                    $err_msg = "保存的ip列表为空";
+                    $errorMsg = "保存的ip列表为空";
                     break;
                 }
                 Cache::$serverIpList = [];
-                $ip_list = explode("\n", $_POST['ip_list']);
-                if ($ip_list)
+                $ipList = explode("\n", $_POST['ip_list']);
+                if ($ipList)
                 {
-                    foreach ($ip_list as $ip)
+                    foreach ($ipList as $ip)
                     {
                         $ip = trim($ip);
                         if (false !== ip2long($ip))
@@ -95,30 +99,26 @@ class AdminController extends BaseController
                         }
                     }
                 }
-                $suc_msg = "保存成功";
+                $successMsg = "保存成功";
                 foreach (Cache::$serverIpList as $ip)
                 {
-                    $ip_list_str .= $ip . "\r\n";
+                    $ipListStr .= $ip . "\r\n";
                 }
-                $this->saveServerIpListToCache();
                 break;
             default:
                 foreach (Cache::$serverIpList as $ip)
                 {
-                    $ip_list_str .= $ip . "\r\n";
+                    $ipListStr .= $ip . "\r\n";
                 }
         }
 
-        $this->template->set('admin/index', get_defined_vars());;
+        $this->template->set('admin/index', [
+            'act'        => $act,
+            'action'     => $action,
+            'successMsg' => $successMsg,
+            'noticeMsg'  => $noticeMsg,
+            'errorMsg'   => $errorMsg,
+            'ipListStr'  => $ipListStr,
+        ]);
     }
-
-    public function saveServerIpListToCache()
-    {
-        foreach (glob(Config::load('statServer')->get('configCachePath') . '*.iplist.cache.php') as $php_file)
-        {
-            unlink($php_file);
-        }
-        file_put_contents(Config::load('statServer')->get('configCachePath') . time() . '.iplist.cache.php', "<?php\n\\stat\\Cache::\$ServerIpList=" . var_export(Cache::$serverIpList, true) . ';');
-    }
-
 }

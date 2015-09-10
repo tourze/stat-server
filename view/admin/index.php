@@ -2,6 +2,13 @@
 
 use tourze\Route\Route;
 
+/** @var string $act */
+/** @var string $action */
+/** @var string $successMsg */
+/** @var string $noticeMsg */
+/** @var string $errorMsg */
+/** @var string $ipListStr */
+
 ?>
 <div class="container">
     <div class="row clearfix">
@@ -23,7 +30,9 @@ use tourze\Route\Route;
                     <a href="#" data-toggle="dropdown" class="dropdown-toggle">其它<strong class="caret"></strong></a>
                     <ul class="dropdown-menu">
                         <li>
-                            <a href="<?php echo Route::url('stat-web', ['controller' => 'Admin', 'action' => 'detect-server']) ?>">探测数据源</a>
+                            <a href="<?php
+                            echo Route::url('stat-web', ['controller' => 'Admin', 'action' => 'detect-server'])
+                            ?>">探测数据源</a>
                         </li>
                         <li>
                             <a href="<?php echo Route::url('stat-web', ['controller' => 'Admin']) ?>">数据源管理</a>
@@ -49,35 +58,35 @@ use tourze\Route\Route;
                     {
                         echo '探测结果';
                     }
-                    elseif ($act == 'add_to_server_list')
+                    elseif ($act == 'add-to-server-list')
                     {
                         echo '添加结果';
                     }
-                    elseif ($act == 'save_server_list')
+                    elseif ($act == 'save-server-list')
                     {
                         echo '保存结果';
                     } ?>
                 </li>
             </ul>
-            <?php if ($suc_msg)
+            <?php if ($successMsg)
             { ?>
                 <div class="alert alert-dismissable alert-success">
                     <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-                    <strong><?php echo $suc_msg; ?></strong>
+                    <strong><?php echo $successMsg; ?></strong>
                 </div>
             <?php }
-            elseif ($err_msg)
+            elseif ($errorMsg)
             { ?>
                 <div class="alert alert-dismissable alert-danger">
                     <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-                    <strong><?php echo $err_msg; ?></strong>
+                    <strong><?php echo $errorMsg; ?></strong>
                 </div>
             <?php }
-            elseif ($notice_msg)
+            elseif ($noticeMsg)
             { ?>
                 <div class="alert alert-dismissable alert-info">
                     <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-                    <strong><?php echo $notice_msg; ?></strong>
+                    <strong><?php echo $noticeMsg; ?></strong>
                 </div>
             <?php } ?>
         </div>
@@ -86,11 +95,13 @@ use tourze\Route\Route;
         <div class="col-md-3 column">
         </div>
         <div class="col-md-6 column">
-            <?php if ($act != 'add_to_server_list')
+            <?php if ($act != 'add-to-server-list')
             { ?>
-                <form action="<?php echo Route::url('stat-web', ['controller' => 'Admin']) ?>?act=<?php echo $action; ?>" method="post">
+                <form
+                    action="<?php echo Route::url('stat-web', ['controller' => 'Admin']) ?>?act=<?php echo $action; ?>"
+                    method="post">
                     <div class="form-group">
-                        <textarea rows="22" cols="30" name="ip_list"><?php echo $ip_list_str; ?></textarea>
+                        <textarea rows="22" cols="30" name="ip_list"><?php echo $ipListStr; ?></textarea>
                     </div>
                     <div class="form-group">
                         <div class="col-sm-offset-1 col-sm-11">
