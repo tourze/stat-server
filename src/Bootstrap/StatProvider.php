@@ -148,7 +148,8 @@ class StatProvider extends Worker
                     {
                         continue;
                     }
-                    list($interface, $date) = explode(".", basename($file));
+                    $temp = explode(".", basename($file));
+                    $interface = array_shift($temp);
                     $interfaceList[$interface] = $interface;
                 }
                 $result[$module] = $interfaceList;

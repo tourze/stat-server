@@ -342,15 +342,15 @@ $htmlClass = '';
                     {
                         $htmlClass = '';
                     }
-                    elseif ($item['precent'] >= 99.99)
+                    elseif ($item['percent'] >= 99.99)
                     {
                         $htmlClass = 'class="success"';
                     }
-                    elseif ($item['precent'] >= 99)
+                    elseif ($item['percent'] >= 99)
                     {
                         $htmlClass = '';
                     }
-                    elseif ($item['precent'] >= 98)
+                    elseif ($item['percent'] >= 98)
                     {
                         $htmlClass = 'class="warning"';
                     }
@@ -372,7 +372,7 @@ $htmlClass = '';
                                 : Arr::get($item, 'fail_count')
                             ?></td>
                         <td><?php echo Arr::get($item, 'fail_avg_time') ?></td>
-                        <td><?php echo Arr::get($item, 'precent') ?>%</td>
+                        <td><?php echo Arr::get($item, 'percent') ?>%</td>
                     </tr>
                     <?php
                 }

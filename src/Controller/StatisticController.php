@@ -94,15 +94,15 @@ class StatisticController extends BaseController
                 {
                     $html_class = '';
                 }
-                elseif ($item['precent'] >= 99.99)
+                elseif ($item['percent'] >= 99.99)
                 {
                     $html_class = 'class="success"';
                 }
-                elseif ($item['precent'] >= 99)
+                elseif ($item['percent'] >= 99)
                 {
                     $html_class = '';
                 }
-                elseif ($item['precent'] >= 98)
+                elseif ($item['percent'] >= 98)
                 {
                     $html_class = 'class="warning"';
                 }
@@ -114,7 +114,7 @@ class StatisticController extends BaseController
             <td>{$item['suc_avg_time']}</td>
             <td>" . ($item['fail_count'] > 0 ? ("<a href='" . Route::url('stat-web', ['controller' => 'Logger']) . "?$query&start_time=" . (strtotime($item['time']) - 300) . "&end_time=" . (strtotime($item['time'])) . "'>{$item['fail_count']}</a>") : $item['fail_count']) . "</td>
             <td>{$item['fail_avg_time']}</td>
-            <td>{$item['precent']}%</td>
+            <td>{$item['percent']}%</td>
             </tr>
             ";
             }

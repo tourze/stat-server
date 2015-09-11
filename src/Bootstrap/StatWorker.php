@@ -50,7 +50,7 @@ class StatWorker extends Worker
      *
      * @var array
      */
-    protected $statisticData = [];
+    protected $statData = [];
 
     /**
      * @var string 日志的buffer
@@ -151,32 +151,36 @@ class StatWorker extends Worker
     protected function collectStatistics($module, $interface, $costTime, $success, $ip, $code, $msg)
     {
         // 统计相关信息
-        if ( ! isset($this->statisticData[$ip]))
+        if ( ! isset($this->statData[$ip]))
         {
-            $this->statisticData[$ip] = [];
+            $this->statData[$ip] = [];
         }
-        if ( ! isset($this->statisticData[$ip][$module]))
+        if ( ! isset($this->statData[$ip][$module]))
         {
-            $this->statisticData[$ip][$module] = [];
+            $this->statData[$ip][$module] = [];
         }
-        if ( ! isset($this->statisticData[$ip][$module][$interface]))
+        if ( ! isset($this->statData[$ip][$module][$interface]))
         {
-            $this->statisticData[$ip][$module][$interface] = ['code' => [], 'success_cost_time' => 0, 'fail_cost_time' => 0, 'success_count' => 0, 'fail_count' => 0];
+            $this->statData[$ip][$module][$interface] = ['code'              => [],
+                                                         'success_cost_time' => 0,
+                                                         'fail_cost_time'    => 0,
+                                                         'success_count'     => 0,
+                                                         'fail_count'        => 0];
         }
-        if ( ! isset($this->statisticData[$ip][$module][$interface]['code'][$code]))
+        if ( ! isset($this->statData[$ip][$module][$interface]['code'][$code]))
         {
-            $this->statisticData[$ip][$module][$interface]['code'][$code] = 0;
+            $this->statData[$ip][$module][$interface]['code'][$code] = 0;
         }
-        $this->statisticData[$ip][$module][$interface]['code'][$code]++;
+        $this->statData[$ip][$module][$interface]['code'][$code]++;
         if ($success)
         {
-            $this->statisticData[$ip][$module][$interface]['success_cost_time'] += $costTime;
-            $this->statisticData[$ip][$module][$interface]['success_count']++;
+            $this->statData[$ip][$module][$interface]['success_cost_time'] += $costTime;
+            $this->statData[$ip][$module][$interface]['success_count']++;
         }
         else
         {
-            $this->statisticData[$ip][$module][$interface]['fail_cost_time'] += $costTime;
-            $this->statisticData[$ip][$module][$interface]['fail_count']++;
+            $this->statData[$ip][$module][$interface]['fail_cost_time'] += $costTime;
+            $this->statData[$ip][$module][$interface]['fail_count']++;
         }
     }
 
@@ -189,7 +193,7 @@ class StatWorker extends Worker
     {
         $time = time();
         // 循环将每个ip的统计数据写入磁盘
-        foreach ($this->statisticData as $ip => $modData)
+        foreach ($this->statData as $ip => $modData)
         {
             foreach ($modData as $module => $items)
             {
@@ -208,7 +212,7 @@ class StatWorker extends Worker
             }
         }
         // 清空统计
-        $this->statisticData = [];
+        $this->statData = [];
     }
 
     /**

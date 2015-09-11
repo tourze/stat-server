@@ -249,7 +249,7 @@ class StatServer
                 'suc_avg_time'   => $item['success_count'] == 0 ? $item['success_count'] : round($item['success_cost_time'] / $item['success_count'], 6),
                 'fail_count'     => $item['fail_count'],
                 'fail_avg_time'  => $item['fail_count'] == 0 ? 0 : round($item['fail_cost_time'] / $item['fail_count'], 6),
-                'precent'        => $item['success_count'] + $item['fail_count'] == 0 ? 0 : round(($item['success_count'] * 100 / ($item['success_count'] + $item['fail_count'])), 4),
+                'percent'        => $item['success_count'] + $item['fail_count'] == 0 ? 0 : round(($item['success_count'] * 100 / ($item['success_count'] + $item['fail_count'])), 4),
             ];
         }
         $timePoint = strtotime($date);
@@ -263,7 +263,7 @@ class StatServer
                 'suc_avg_time'   => 0,
                 'fail_count'     => 0,
                 'fail_avg_time'  => 0,
-                'precent'        => 100,
+                'percent'        => 100,
             ];
             $timePoint += 300;
         }

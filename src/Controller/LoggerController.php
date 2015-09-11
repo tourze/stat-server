@@ -49,7 +49,8 @@ class LoggerController extends BaseController
         $logStr = '';
         foreach ($logDataArray as $address => $log_data)
         {
-            list($ip, $port) = explode(':', $address);
+            $temp = explode(':', $address);
+            $ip = array_shift($temp);
             $logStr .= $log_data['data'];
             $_GET['ip'][] = $ip;
             $_GET['offset'][] = $log_data['offset'];
@@ -80,17 +81,16 @@ class LoggerController extends BaseController
                                                             'count'      => $count]) . "\n";
         }
 
-        $read_buffer_array = StatServer::multiRequest($requestBufferArray);
-        ksort($read_buffer_array);
-        foreach ($read_buffer_array as $address => $buf)
+        $readBufferArray = StatServer::multiRequest($requestBufferArray);
+        ksort($readBufferArray);
+        foreach ($readBufferArray as $address => $buf)
         {
-            list($ip, $port) = explode(':', $address);
-            $body_data = json_decode(trim($buf), true);
-            $log_data = isset($body_data['data']) ? $body_data['data'] : '';
-            $offset = isset($body_data['offset']) ? $body_data['offset'] : 0;
-            $read_buffer_array[$address] = ['offset' => $offset, 'data' => $log_data];
+            $bodyData = json_decode(trim($buf), true);
+            $logData = isset($bodyData['data']) ? $bodyData['data'] : '';
+            $offset = isset($bodyData['offset']) ? $bodyData['offset'] : 0;
+            $readBufferArray[$address] = ['offset' => $offset, 'data' => $logData];
         }
-        return $read_buffer_array;
+        return $readBufferArray;
     }
 
 }
