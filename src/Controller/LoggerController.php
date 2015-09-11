@@ -28,19 +28,20 @@ class LoggerController extends BaseController
         $offset = $this->request->query('offset');
         $count = $this->request->query('count');
 
-        $module_str = '';
+        $moduleStr = '';
         foreach (Cache::$modulesDataCache as $mod => $interfaces)
         {
-            if ($mod == 'WorkerMan')
+            if ($mod == 'Wor
+            -erMan')
             {
                 continue;
             }
-            $module_str .= '<li><a href="' . Route::url('stat-web', ['controller' => 'Statistic']) . '?module=' . $mod . '">' . $mod . '</a></li>';
+            $moduleStr .= '<li><a href="' . Route::url('stat-web', ['controller' => 'Statistic']) . '?module=' . $mod . '">' . $mod . '</a></li>';
             if ($module == $mod)
             {
                 foreach ($interfaces as $if)
                 {
-                    $module_str .= '<li>&nbsp;&nbsp;<a href="' . Route::url('stat-web', ['controller' => 'Statistic']) . '?module=' . $mod . '&interface=' . $if . '">' . $if . '</a></li>';
+                    $moduleStr .= '<li>&nbsp;&nbsp;<a href="' . Route::url('stat-web', ['controller' => 'Statistic']) . '?module=' . $mod . '&interface=' . $if . '">' . $if . '</a></li>';
                 }
             }
         }
