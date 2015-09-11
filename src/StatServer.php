@@ -134,7 +134,7 @@ class StatServer
         Cache::$statDataCache['statistic'] = '';
 
         $buffer = [
-            'cmd'       => 'get_statistic',
+            'cmd'       => 'get-statistic',
             'module'    => $module,
             'interface' => $interface,
             'date'      => $date,

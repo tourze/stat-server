@@ -107,11 +107,13 @@ class StatProvider extends Worker
         // 根据发送过来的cmd参数
         switch ($cmd)
         {
-            case 'get_statistic':
+            // 获取统计数据
+            case 'get-statistic':
                 $buffer = json_encode(['modules' => $this->getModules($module), 'statistic' => $this->getStatistic($date, $module, $interface)]) . "\n";
                 $connection->send($buffer);
                 break;
-            case 'get_log':
+            // 获取日志
+            case 'get-log':
                 $buffer = json_encode($this->getStasticLog($module, $interface, $start_time, $end_time, $code, $msg, $offset, $count)) . "\n";
                 $connection->send($buffer);
                 break;

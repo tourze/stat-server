@@ -4,6 +4,7 @@ namespace stat\Controller;
 
 use stat\StatServer;
 use stat\Cache;
+use tourze\Base\Base;
 use tourze\Base\Config;
 use tourze\Route\Route;
 use tourze\View\View;
@@ -64,7 +65,7 @@ class LoggerController extends BaseController
         ]));
     }
 
-    public function getStasticLog($module, $interface, $start_time, $offset = '', $count = 10)
+    public function getStasticLog($module, $interface, $startTime, $offset = '', $count = 10)
     {
         $ipList = ( ! empty($_GET['ip']) && is_array($_GET['ip'])) ? $_GET['ip'] : Cache::$serverIpList;
         $offset_list = ( ! empty($_GET['offset']) && is_array($_GET['offset'])) ? $_GET['offset'] : [];
@@ -73,12 +74,16 @@ class LoggerController extends BaseController
         foreach ($ipList as $key => $ip)
         {
             $offset = isset($offset_list[$key]) ? $offset_list[$key] : 0;
-            $requestBufferArray["$ip:$port"] = json_encode(['cmd'        => 'get_log',
-                                                            'module'     => $module,
-                                                            'interface'  => $interface,
-                                                            'start_time' => $start_time,
-                                                            'offset'     => $offset,
-                                                            'count'      => $count]) . "\n";
+            $buffer = [
+                'cmd'        => 'get-log',
+                'module'     => $module,
+                'interface'  => $interface,
+                'start_time' => $startTime,
+                'offset'     => $offset,
+                'count'      => $count
+            ];
+            Base::getLog()->info(__METHOD__ . ' generate buffer fot getting log', $buffer);
+            $requestBufferArray["$ip:$port"] = json_encode($buffer) . "\n";
         }
 
         $readBufferArray = StatServer::multiRequest($requestBufferArray);
