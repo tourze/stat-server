@@ -5,6 +5,7 @@ namespace stat\Controller;
 use tourze\Base\Base;
 use tourze\Base\Config;
 use tourze\Controller\TemplateController;
+use tourze\View\View;
 
 /**
  * 基础的模板控制器
@@ -19,9 +20,9 @@ abstract class BaseController extends TemplateController
      */
     public function before()
     {
-        parent::before();
         // 检查是否登录
         $this->checkAuth();
+        parent::before();
     }
 
     /**
@@ -39,20 +40,28 @@ abstract class BaseController extends TemplateController
         {
             if ( ! isset($_POST['admin_name']) || ! isset($_POST['admin_password']))
             {
-                include ROOT_PATH . 'view/login.tpl.php';
-                self::_exit();
+                $this->response->body = View::factory('login');
+                $this->autoRender = false;
+                $this->break = true;
+                return false;
             }
             else
             {
-                $admin_name = $_POST['admin_name'];
-                $admin_password = $_POST['admin_password'];
-                if ($admin_name != Config::load('statServer')->get('adminName') || $admin_password != Config::load('statServer')->get('adminPassword'))
+                $adminName = $_POST['admin_name'];
+                $adminPass = $_POST['admin_password'];
+                if ($adminName != Config::load('statServer')->get('adminName') || $adminPass != Config::load('statServer')->get('adminPassword'))
                 {
-                    $msg = "用户名或者密码不正确";
-                    include ROOT_PATH . 'view/login.tpl.php';
-                    self::_exit();
+                    $this->response->body = View::factory('login', [
+                        'msg' => '用户名或者密码不正确',
+                    ]);
+                    $this->autoRender = false;
+                    $this->break = true;
+                    return false;
                 }
-                $_SESSION['admin'] = $admin_name;
+                else
+                {
+                    Base::getSession()->set('admin', $adminName);
+                }
             }
         }
         return true;
