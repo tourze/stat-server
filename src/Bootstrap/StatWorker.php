@@ -3,6 +3,7 @@
 namespace stat\Bootstrap;
 
 use stat\StatServer;
+use tourze\Base\Base;
 use tourze\Base\Config;
 use tourze\Base\Helper\Arr;
 use tourze\Server\Worker;
@@ -99,6 +100,8 @@ class StatWorker extends Worker
      */
     public function onMessage($connection, $data)
     {
+        Base::getLog()->info(__METHOD__ . ' receive data', $data);
+
         // 解码
         $module = Arr::get($data, 'module');
         $interface = Arr::get($data, 'interface');

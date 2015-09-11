@@ -189,6 +189,11 @@ class StatServer
      */
     public static function formatStatLog($str, $date, &$codeMap)
     {
+        Base::getLog()->info(__METHOD__ . ' format stat log', [
+            'str'  => $str,
+            'date' => $date,
+        ]);
+
         // time:[success_count:xx,success_cost_time:xx,fail_count:xx,fail_cost_time:xx]
         $stData = $codeMap = [];
         $lines = explode("\n", $str);

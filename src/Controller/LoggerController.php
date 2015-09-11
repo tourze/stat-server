@@ -24,15 +24,15 @@ class LoggerController extends BaseController
     {
         $module = $this->request->query('module');
         $interface = $this->request->query('interface');
-        $start_time = $this->request->query('start_time');
+        $startTime = $this->request->query('start_time');
+        $endTime = $this->request->query('end_time');
         $offset = $this->request->query('offset');
         $count = $this->request->query('count');
 
         $moduleStr = '';
         foreach (Cache::$modulesDataCache as $mod => $interfaces)
         {
-            if ($mod == 'Wor
-            -erMan')
+            if ($mod == 'WorkerMan')
             {
                 continue;
             }
@@ -46,8 +46,8 @@ class LoggerController extends BaseController
             }
         }
 
-        $logDataArray = $this->getStasticLog($module, $interface, $start_time, $offset, $count);
-        unset($_GET['fn'], $_GET['ip'], $_GET['offset']);
+        $logDataArray = $this->getStasticLog($module, $interface, $startTime, $endTime, $offset, $count);
+        unset($_GET['ip'], $_GET['offset']);
         $logStr = '';
         foreach ($logDataArray as $address => $log_data)
         {
@@ -66,22 +66,23 @@ class LoggerController extends BaseController
         ]));
     }
 
-    public function getStasticLog($module, $interface, $startTime, $offset = '', $count = 10)
+    public function getStasticLog($module, $interface, $startTime, $endTime, $offset = '', $count = 10)
     {
         $ipList = ( ! empty($_GET['ip']) && is_array($_GET['ip'])) ? $_GET['ip'] : Cache::$serverIpList;
-        $offset_list = ( ! empty($_GET['offset']) && is_array($_GET['offset'])) ? $_GET['offset'] : [];
+        $offsetList = ( ! empty($_GET['offset']) && is_array($_GET['offset'])) ? $_GET['offset'] : [];
         $port = Config::load('statServer')->get('providerPort');
         $requestBufferArray = [];
         foreach ($ipList as $key => $ip)
         {
-            $offset = isset($offset_list[$key]) ? $offset_list[$key] : 0;
+            $offset = isset($offsetList[$key]) ? $offsetList[$key] : 0;
             $buffer = [
                 'cmd'        => 'get-log',
                 'module'     => $module,
                 'interface'  => $interface,
                 'start_time' => $startTime,
+                'end_time'   => $endTime,
                 'offset'     => $offset,
-                'count'      => $count
+                'count'      => $count,
             ];
             Base::getLog()->info(__METHOD__ . ' generate buffer fot getting log', $buffer);
             $requestBufferArray["$ip:$port"] = json_encode($buffer) . "\n";

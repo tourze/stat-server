@@ -24,6 +24,10 @@ class StatisticController extends BaseController
         $module = $this->request->query('module');
         $interface = $this->request->query('interface');
         $date = $this->request->query('date');
+        if ( ! $date)
+        {
+            $date = date('Y-m-d');
+        }
 
         $errorMsg = '';
         $today = date('Y-m-d');

@@ -18,9 +18,6 @@ use tourze\Route\Route;
                 <li class="active">
                     <a href="<?php echo Route::url('stat-web', ['controller' => 'Logger']) ?>">日志</a>
                 </li>
-                <li class="disabled">
-                    <a href="#">告警</a>
-                </li>
                 <li class="dropdown pull-right">
                     <a href="#" data-toggle="dropdown" class="dropdown-toggle">其它<strong class="caret"></strong></a>
                     <ul class="dropdown-menu">

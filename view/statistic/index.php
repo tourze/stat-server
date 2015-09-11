@@ -29,14 +29,12 @@ use tourze\Route\Route;
                 <li>
                     <a href="<?php echo Route::url('stat-web', ['controller' => 'Logger']) ?>">日志</a>
                 </li>
-                <li class="disabled">
-                    <a href="#">告警</a>
-                </li>
                 <li class="dropdown pull-right">
                     <a href="#" data-toggle="dropdown" class="dropdown-toggle">其它<strong class="caret"></strong></a>
                     <ul class="dropdown-menu">
                         <li>
-                            <a href="<?php echo Route::url('stat-web', ['controller' => 'Admin', 'action' => 'detect-server']) ?>">探测数据源</a>
+                            <a href="<?php echo Route::url('stat-web', ['controller' => 'Admin',
+                                                                        'action'     => 'detect-server']) ?>">探测数据源</a>
                         </li>
                         <li>
                             <a href="<?php echo Route::url('stat-web', ['controller' => 'Admin']) ?>">数据源管理</a>
@@ -51,7 +49,7 @@ use tourze\Route\Route;
             <ul><?php echo $moduleStr; ?></ul>
         </div>
         <div class="col-md-9 column">
-            <?php 
+            <?php
             if ($errorMsg)
             { ?>
                 <div class="alert alert-dismissable alert-danger">

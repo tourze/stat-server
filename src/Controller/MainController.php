@@ -21,6 +21,11 @@ class MainController extends BaseController
     public function actionIndex()
     {
         $date = $this->request->query('date');
+        if ( ! $date)
+        {
+            $date = date('Y-m-d');
+        }
+
         $errorMsg = $noticeMsg = '';
         $module = 'WorkerMan';
         $interface = 'Statistics';
@@ -36,8 +41,8 @@ class MainController extends BaseController
             }
         }
 
-        $code_map = [];
-        $data = StatBase::formatStatLog($allStr, $date, $code_map);
+        $codeMap = [];
+        $data = StatBase::formatStatLog($allStr, $date, $codeMap);
         $successSeriesData = $failSeriesData = $successTimeSeriesData = $failTimeSeriesData = [];
         $totalCount = $fail_count = 0;
         foreach ($data as $time_point => $item)
@@ -65,15 +70,15 @@ class MainController extends BaseController
         // 返回码分布
         $codePieData = '';
         $codePieArray = [];
-        unset($code_map[0]);
-        if (empty($code_map))
+        unset($codeMap[0]);
+        if (empty($codeMap))
         {
-            $code_map[0] = $totalCount > 0 ? $totalCount : 1;
+            $codeMap[0] = $totalCount > 0 ? $totalCount : 1;
         }
-        if (is_array($code_map))
+        if (is_array($codeMap))
         {
-            $total_item_count = array_sum($code_map);
-            foreach ($code_map as $code => $count)
+            $total_item_count = array_sum($codeMap);
+            foreach ($codeMap as $code => $count)
             {
                 $codePieArray[] = "[\"$code:{$count}个\", " . round($count * 100 / $total_item_count, 4) . "]";
             }

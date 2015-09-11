@@ -96,8 +96,8 @@ class StatProvider extends Worker
         $interface = Arr::get($requestData, 'interface');
         $cmd = Arr::get($requestData, 'cmd');
 
-        $start_time = Arr::get($requestData, 'start_time', '');
-        $end_time = Arr::get($requestData, 'end_time', '');
+        $startTime = Arr::get($requestData, 'start_time', '');
+        $endTime = Arr::get($requestData, 'end_time', '');
         $date = Arr::get($requestData, 'date', '');
         $code = Arr::get($requestData, 'code', '');
         $msg = Arr::get($requestData, 'msg', '');
@@ -114,7 +114,7 @@ class StatProvider extends Worker
                 break;
             // 获取日志
             case 'get-log':
-                $buffer = json_encode($this->getStasticLog($module, $interface, $start_time, $end_time, $code, $msg, $offset, $count)) . "\n";
+                $buffer = json_encode($this->getStasticLog($module, $interface, $startTime, $endTime, $code, $msg, $offset, $count)) . "\n";
                 $connection->send($buffer);
                 break;
             default :
