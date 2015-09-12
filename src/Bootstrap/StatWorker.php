@@ -46,6 +46,11 @@ class StatWorker extends Worker
     const EXPIRED_TIME = 1296000;
 
     /**
+     * {@inheritdoc}
+     */
+    public $transport = 'udp';
+
+    /**
      * 统计数据
      * ip=>modid=>interface=>['code'=>[xx=>count,xx=>count],'success_cost_time'=>xx,'fail_cost_time'=>xx, 'success_count'=>xx, 'fail_count'=>xx]
      *
@@ -107,9 +112,9 @@ class StatWorker extends Worker
         $interface = Arr::get($data, 'interface');
         $costTime = Arr::get($data, 'cost_time');
         $success = Arr::get($data, 'success');
-        $time = Arr::get($data, 'time');
+        $time = Arr::get($data, 'time'); // 此时提交的是时间戳
         $code = Arr::get($data, 'code');
-        $msg = str_replace("\n", "<br>", Arr::get($data, 'msg'));
+        $msg = str_replace(["\r\n", "\r", "\n"], "<br>", Arr::get($data, 'msg'));
         $ip = $connection->getRemoteIp();
 
         // 模块接口统计
@@ -117,7 +122,7 @@ class StatWorker extends Worker
         // 全局统计
         $this->collectStatistics('WorkerMan', 'Statistics', $costTime, $success, $ip, $code, $msg);
 
-        // 失败记录日志
+        // 只记录错误日志
         if ( ! $success)
         {
             $this->logBuffer .= date('Y-m-d H:i:s', $time)
@@ -132,6 +137,7 @@ class StatWorker extends Worker
                 . "\t"
                 . "msg:$msg"
                 . "\n";
+            // 足够长度了，就写入硬盘
             if (strlen($this->logBuffer) >= self::MAX_LOG_BUFFER_SIZE)
             {
                 $this->writeLogToDisk();
