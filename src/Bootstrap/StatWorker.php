@@ -118,25 +118,21 @@ class StatWorker extends Worker
         $ip = $connection->getRemoteIp();
 
         // 模块接口统计
-        $this->collectStatistics($module, $interface, $costTime, $success, $ip, $code, $msg);
+        $this->collectStatistics($module, $interface, $costTime, $success, $ip, $code);
         // 全局统计
-        $this->collectStatistics('WorkerMan', 'Statistics', $costTime, $success, $ip, $code, $msg);
+        $this->collectStatistics('WorkerMan', 'Statistics', $costTime, $success, $ip, $code);
 
         // 只记录错误日志
         if ( ! $success)
         {
-            $this->logBuffer .= date('Y-m-d H:i:s', $time)
-                . "\t"
-                . $ip
-                . "\t"
-                . $module
-                . "::"
-                . $interface
-                . "\t"
-                . "code:$code"
-                . "\t"
-                . "msg:$msg"
-                . "\n";
+            $line = [
+                date('Y-m-d H:i:s', $time),
+                $ip,
+                $module . '::' . $interface,
+                'code:' . $code,
+                'msg:' . $msg,
+            ];
+            $this->logBuffer .= implode("\t", $line) . "\n";
             // 足够长度了，就写入硬盘
             if (strlen($this->logBuffer) >= self::MAX_LOG_BUFFER_SIZE)
             {
@@ -154,11 +150,13 @@ class StatWorker extends Worker
      * @param int    $success
      * @param string $ip
      * @param int    $code
-     * @param string $msg
      * @return void
      */
-    protected function collectStatistics($module, $interface, $costTime, $success, $ip, $code, $msg)
+    protected function collectStatistics($module, $interface, $costTime, $success, $ip, $code)
     {
+        // 下面的逻辑，用Arr::path来完成可能清晰点
+        // 但是因为IP会带小数点，这跟Arr::path的规则有冲突了，所以不能再这样做
+
         // 统计相关信息
         if ( ! isset($this->statData[$ip]))
         {
@@ -170,11 +168,13 @@ class StatWorker extends Worker
         }
         if ( ! isset($this->statData[$ip][$module][$interface]))
         {
-            $this->statData[$ip][$module][$interface] = ['code'              => [],
-                                                         'success_cost_time' => 0,
-                                                         'fail_cost_time'    => 0,
-                                                         'success_count'     => 0,
-                                                         'fail_count'        => 0];
+            $this->statData[$ip][$module][$interface] = [
+                'code'              => [],
+                'success_cost_time' => 0,
+                'fail_cost_time'    => 0,
+                'success_count'     => 0,
+                'fail_count'        => 0,
+            ];
         }
         if ( ! isset($this->statData[$ip][$module][$interface]['code'][$code]))
         {
@@ -207,16 +207,26 @@ class StatWorker extends Worker
             foreach ($modData as $module => $items)
             {
                 // 文件夹不存在则创建一个
-                $file_dir = Config::load('statServer')->get('dataPath') . $this->statDir . $module;
-                if ( ! is_dir($file_dir))
+                $fileDir = Config::load('statServer')->get('dataPath') . $this->statDir . $module;
+                if ( ! is_dir($fileDir))
                 {
                     umask(0);
-                    mkdir($file_dir, 0777, true);
+                    mkdir($fileDir, 0777, true);
                 }
                 // 依次写入磁盘
                 foreach ($items as $interface => $data)
                 {
-                    file_put_contents($file_dir . "/{$interface}." . date('Y-m-d'), "$ip\t$time\t{$data['success_count']}\t{$data['success_cost_time']}\t{$data['fail_count']}\t{$data['fail_cost_time']}\t" . json_encode($data['code']) . "\n", FILE_APPEND | LOCK_EX);
+                    $file = $fileDir . "/{$interface}." . date('Y-m-d');
+                    $line = [
+                        $ip,
+                        $time,
+                        Arr::get($data, 'success_count'),
+                        Arr::get($data, 'success_cost_time'),
+                        Arr::get($data, 'fail_count'),
+                        Arr::get($data, 'fail_cost_time'),
+                        json_encode(Arr::get($data, 'code')),
+                    ];
+                    file_put_contents($file, implode("\t", $line) . "\n", FILE_APPEND | LOCK_EX);
                 }
             }
         }
@@ -277,8 +287,6 @@ class StatWorker extends Worker
 
     /**
      * 进程停止时需要将数据写入磁盘
-     *
-     * @see Man\Core.SocketWorker::onStop()
      */
     protected function onStop()
     {
@@ -294,7 +302,7 @@ class StatWorker extends Worker
      */
     public function clearDisk($file = null, $expiredTime = 86400)
     {
-        $time_now = time();
+        $timeNow = time();
         if (is_file($file))
         {
             $mTime = filemtime($file);
@@ -303,7 +311,7 @@ class StatWorker extends Worker
                 print("filemtime $file fail");
                 return;
             }
-            if ($time_now - $mTime > $expiredTime)
+            if ($timeNow - $mTime > $expiredTime)
             {
                 unlink($file);
             }

@@ -109,7 +109,11 @@ class StatProvider extends Worker
         {
             // 获取统计数据
             case 'get-statistic':
-                $buffer = json_encode(['modules' => $this->getModules($module), 'statistic' => $this->getStatistic($date, $module, $interface)]) . "\n";
+                $buffer = [
+                    'modules'   => $this->getModules($module),
+                    'statistic' => $this->getStatistic($date, $module, $interface),
+                ];
+                $buffer = json_encode($buffer) . "\n";
                 $connection->send($buffer);
                 break;
             // 获取日志
@@ -191,12 +195,12 @@ class StatProvider extends Worker
             $line = fgets($handle, 4096);
             if ($line)
             {
-                $explode = explode("\t", $line);
-                if (count($explode) < 7)
+                $columns = explode("\t", $line);
+                if (count($columns) < 7)
                 {
                     continue;
                 }
-                list($ip, $time, $successCount, $successCostTime, $failCount, $failCostTime, $codeMap) = $explode;
+                list($ip, $time, $successCount, $successCostTime, $failCount, $failCostTime, $codeMap) = $columns;
                 $time = intval(ceil($time / 300) * 300);
                 if ( ! isset($statData[$time]))
                 {
@@ -240,7 +244,16 @@ class StatProvider extends Worker
         {
             foreach ($items as $ip => $item)
             {
-                $result .= "$ip\t$time\t{$item['success_count']}\t{$item['success_cost_time']}\t{$item['fail_count']}\t{$item['fail_cost_time']}\t" . json_encode($item['code_map']) . "\n";
+                $line = [
+                    $ip,
+                    $time,
+                    Arr::get($item, 'success_count'),
+                    Arr::get($item, 'success_cost_time'),
+                    Arr::get($item, 'fail_count'),
+                    Arr::get($item, 'fail_cost_time'),
+                    json_encode(Arr::get($item, 'code_map')),
+                ];
+                $result .= implode("\t", $line) . "\n";
             }
         }
         return $result;
