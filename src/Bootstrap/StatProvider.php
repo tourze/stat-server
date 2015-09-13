@@ -421,14 +421,14 @@ class StatProvider extends Worker
 
         // 获得时间
         $tmp = explode("\t", $line);
-        $tmp_time = strtotime($tmp[0]);
+        $tmpTime = strtotime($tmp[0]);
 
         // 判断时间，返回指针位置
-        if ($tmp_time > $time)
+        if ($tmpTime > $time)
         {
             return $this->binarySearch($startPoint, $current_point, $time, $fd);
         }
-        elseif ($tmp_time < $time)
+        elseif ($tmpTime < $time)
         {
             return $this->binarySearch($current_point, $endPoint, $time, $fd);
         }

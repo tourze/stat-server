@@ -1,6 +1,6 @@
 {
-  "name": "tourze/com.tourze.stat",
-  "description": "数据统计中心",
+  "name": "tourze/demo-stat",
+  "description": "数据手机和统计应用",
   "authors": [
     {
       "name": "tourze",
@@ -13,8 +13,7 @@
     "tourze/bootstrap": "^1.0",
     "tourze/controller": "^1.0",
     "tourze/view": "^1.0",
-    "tourze/server": "^1.0",
-    "tourze/tourze": "dev-master"
+    "tourze/server": "^1.0"
   },
   "autoload": {
     "psr-4": {
@@ -23,12 +22,8 @@
   },
   "repositories": [
     {
-      "type": "git",
-      "url": "https://git.oschina.net/ywisax/com.tourze.php.tourze.git"
-    },
-    {
       "type": "composer",
-      "url": "http://php.composer.org/repo/packagist/"
+      "url": "http://packagist.phpcomposer.com"
     },
     {
       "packagist": false
