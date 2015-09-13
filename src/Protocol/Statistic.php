@@ -5,6 +5,7 @@ namespace tourze\StatServer\Protocol;
 use tourze\Base\Helper\Arr;
 
 /**
+ * 统计协议
  *
  * struct statistic协议结构
  * {
@@ -20,7 +21,7 @@ use tourze\Base\Helper\Arr;
  *     char[msg_len] msg;
  * }
  *
- * @author workerman.net
+ * @package tourze\StatServer\Protocol
  */
 class Statistic
 {

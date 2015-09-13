@@ -131,7 +131,7 @@ class StatServer
     public static function multiRequestStAndModules($module, $interface, $date)
     {
         Base::getLog()->info(__METHOD__ . ' calling multiRequestStAndModules - start');
-        Cache::$statDataCache['statistic'] = '';
+        Cache::$statisticData['statistic'] = '';
 
         $buffer = [
             'cmd'       => 'get-statistic',
@@ -164,16 +164,16 @@ class StatServer
             // 整理modules
             foreach ($modulesData as $mod => $interfaces)
             {
-                if ( ! isset(Cache::$modulesDataCache[$mod]))
+                if ( ! isset(Cache::$moduleData[$mod]))
                 {
-                    Cache::$modulesDataCache[$mod] = [];
+                    Cache::$moduleData[$mod] = [];
                 }
                 foreach ($interfaces as $if)
                 {
-                    Cache::$modulesDataCache[$mod][$if] = $if;
+                    Cache::$moduleData[$mod][$if] = $if;
                 }
             }
-            Cache::$statDataCache['statistic'][$ip] = $statData;
+            Cache::$statisticData['statistic'][$ip] = $statData;
         }
 
         Base::getLog()->info(__METHOD__ . ' calling multiRequestStAndModules - end');

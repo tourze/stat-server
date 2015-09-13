@@ -26,11 +26,10 @@ class LoggerController extends BaseController
         $interface = $this->request->query('interface');
         $startTime = $this->request->query('start_time');
         $endTime = $this->request->query('end_time');
-        $offset = $this->request->query('offset');
         $count = $this->request->query('count');
 
         $moduleStr = '';
-        foreach (Cache::$modulesDataCache as $mod => $interfaces)
+        foreach (Cache::$moduleData as $mod => $interfaces)
         {
             if ($mod == 'WorkerMan')
             {
@@ -46,7 +45,7 @@ class LoggerController extends BaseController
             }
         }
 
-        $logDataArray = $this->getStasticLog($module, $interface, $startTime, $endTime, $offset, $count);
+        $logDataArray = $this->getStasticLog($module, $interface, $startTime, $endTime, $count);
         unset($_GET['ip'], $_GET['offset']);
         $logStr = '';
         foreach ($logDataArray as $address => $log_data)
@@ -66,7 +65,7 @@ class LoggerController extends BaseController
         ]));
     }
 
-    public function getStasticLog($module, $interface, $startTime, $endTime, $offset = '', $count = 10)
+    public function getStasticLog($module, $interface, $startTime, $endTime, $count = 10)
     {
         $ipList = ( ! empty($_GET['ip']) && is_array($_GET['ip'])) ? $_GET['ip'] : Cache::$serverIpList;
         $offsetList = ( ! empty($_GET['offset']) && is_array($_GET['offset'])) ? $_GET['offset'] : [];

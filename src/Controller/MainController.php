@@ -33,9 +33,9 @@ class MainController extends BaseController
         $timeNow = time();
         StatServer::multiRequestStAndModules($module, $interface, $date);
         $allStr = '';
-        if (is_array(Cache::$statDataCache['statistic']))
+        if (is_array(Cache::$statisticData['statistic']))
         {
-            foreach (Cache::$statDataCache['statistic'] as $ip => $st_str)
+            foreach (Cache::$statisticData['statistic'] as $ip => $st_str)
             {
                 $allStr .= $st_str;
             }

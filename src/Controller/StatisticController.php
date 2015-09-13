@@ -34,9 +34,9 @@ class StatisticController extends BaseController
         $timeNow = time();
         StatServer::multiRequestStAndModules($module, $interface, $date);
         $allStr = '';
-        if (is_array(Cache::$statDataCache['statistic']))
+        if (is_array(Cache::$statisticData['statistic']))
         {
-            foreach (Cache::$statDataCache['statistic'] as $ip => $st_str)
+            foreach (Cache::$statisticData['statistic'] as $ip => $st_str)
             {
                 $allStr .= $st_str;
             }
@@ -142,7 +142,7 @@ class StatisticController extends BaseController
         $dateBtnStr .= '<a href="' . Route::url('stat-web', ['controller' => 'Statistic']) . '?date=' . "$theDate&$query" . '" class="btn" type="button">' . $htmlTheDate . '</a>';
 
         $moduleStr = '';
-        foreach (Cache::$modulesDataCache as $mod => $interfaces)
+        foreach (Cache::$moduleData as $mod => $interfaces)
         {
             if ($mod == 'WorkerMan')
             {
