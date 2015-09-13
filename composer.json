@@ -13,6 +13,7 @@
     "tourze/bootstrap": "^1.0",
     "tourze/controller": "^1.0",
     "tourze/view": "^1.0",
+    "tourze/html": "^1.0",
     "tourze/server": "^1.0"
   },
   "autoload": {
