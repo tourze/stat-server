@@ -1,13 +1,14 @@
 {
   "name": "tourze/stat-server",
   "description": "数据收集和统计，服务端",
+  "license": "MIT",
+  "minimum-stability": "stable",
   "authors": [
     {
       "name": "tourze",
       "email": "dev@tourze.com"
     }
   ],
-  "minimum-stability": "stable",
   "require": {
     "tourze/base": "^1.0",
     "tourze/bootstrap": "^1.0",
