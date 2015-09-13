@@ -31,7 +31,7 @@ class StatisticController extends BaseController
 
         $errorMsg = '';
         $today = date('Y-m-d');
-        $time_now = time();
+        $timeNow = time();
         StatServer::multiRequestStAndModules($module, $interface, $date);
         $allStr = '';
         if (is_array(Cache::$statDataCache['statistic']))
@@ -42,8 +42,8 @@ class StatisticController extends BaseController
             }
         }
 
-        $code_map = [];
-        $data = StatServer::formatStatLog($allStr, $date, $code_map);
+        $codeMap = [];
+        $data = StatServer::formatStatLog($allStr, $date, $codeMap);
         $interfaceName = "$module::$interface";
         $successSeriesData = $failSeriesData = $successTimeSeriesData = $failTimeSeriesData = [];
         $totalCount = $failCount = 0;
@@ -73,44 +73,44 @@ class StatisticController extends BaseController
         // 删除末尾0的记录
         if ($today == $date)
         {
-            while ( ! empty($data) && ($item = end($data)) && $item['total_count'] == 0 && ($key = key($data)) && $time_now < $key)
+            while ( ! empty($data) && ($item = end($data)) && $item['total_count'] == 0 && ($key = key($data)) && $timeNow < $key)
             {
                 unset($data[$key]);
             }
         }
 
-        $tableData = $html_class = '';
+        $tableData = $htmlClass = '';
         if ($data)
         {
-            $first_line = true;
+            $firstLine = true;
             foreach ($data as $item)
             {
-                if ($first_line)
+                if ($firstLine)
                 {
-                    $first_line = false;
+                    $firstLine = false;
                     if ($item['total_count'] == 0)
                     {
                         continue;
                     }
                 }
-                $html_class = 'class="danger"';
+                $htmlClass = 'class="danger"';
                 if ($item['total_count'] == 0)
                 {
-                    $html_class = '';
+                    $htmlClass = '';
                 }
                 elseif ($item['percent'] >= 99.99)
                 {
-                    $html_class = 'class="success"';
+                    $htmlClass = 'class="success"';
                 }
                 elseif ($item['percent'] >= 99)
                 {
-                    $html_class = '';
+                    $htmlClass = '';
                 }
                 elseif ($item['percent'] >= 98)
                 {
-                    $html_class = 'class="warning"';
+                    $htmlClass = 'class="warning"';
                 }
-                $tableData .= "\n<tr $html_class>
+                $tableData .= "\n<tr $htmlClass>
             <td>{$item['time']}</td>
             <td>{$item['total_count']}</td>
             <td> {$item['total_avg_time']}</td>
@@ -128,18 +128,18 @@ class StatisticController extends BaseController
         $dateBtnStr = '';
         for ($i = 13; $i >= 1; $i--)
         {
-            $the_time = strtotime("-$i day");
-            $the_date = date('Y-m-d', $the_time);
-            $html_the_date = $date == $the_date ? "<b>$the_date</b>" : $the_date;
-            $dateBtnStr .= '<a href="' . Route::url('stat-web', ['controller' => 'Statistic']) . '?date=' . "$the_date&$query" . '" class="btn ' . $html_class . '" type="button">' . $html_the_date . '</a>';
+            $theTime = strtotime("-$i day");
+            $theDate = date('Y-m-d', $theTime);
+            $htmlTheDate = $date == $theDate ? "<b>$theDate</b>" : $theDate;
+            $dateBtnStr .= '<a href="' . Route::url('stat-web', ['controller' => 'Statistic']) . '?date=' . "$theDate&$query" . '" class="btn ' . $htmlClass . '" type="button">' . $htmlTheDate . '</a>';
             if ($i == 7)
             {
                 $dateBtnStr .= '</br>';
             }
         }
-        $the_date = date('Y-m-d');
-        $html_the_date = $date == $the_date ? "<b>$the_date</b>" : $the_date;
-        $dateBtnStr .= '<a href="' . Route::url('stat-web', ['controller' => 'Statistic']) . '?date=' . "$the_date&$query" . '" class="btn" type="button">' . $html_the_date . '</a>';
+        $theDate = date('Y-m-d');
+        $htmlTheDate = $date == $theDate ? "<b>$theDate</b>" : $theDate;
+        $dateBtnStr .= '<a href="' . Route::url('stat-web', ['controller' => 'Statistic']) . '?date=' . "$theDate&$query" . '" class="btn" type="button">' . $htmlTheDate . '</a>';
 
         $moduleStr = '';
         foreach (Cache::$modulesDataCache as $mod => $interfaces)

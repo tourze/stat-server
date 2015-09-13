@@ -30,7 +30,7 @@ class MainController extends BaseController
         $module = 'WorkerMan';
         $interface = 'Statistics';
         $today = date('Y-m-d');
-        $time_now = time();
+        $timeNow = time();
         StatServer::multiRequestStAndModules($module, $interface, $date);
         $allStr = '';
         if (is_array(Cache::$statDataCache['statistic']))
@@ -91,7 +91,7 @@ class MainController extends BaseController
         // 删除末尾0的记录
         if ($today == $date)
         {
-            while ( ! empty($data) && ($item = end($data)) && $item['total_count'] == 0 && ($key = key($data)) && $time_now < $key)
+            while ( ! empty($data) && ($item = end($data)) && $item['total_count'] == 0 && ($key = key($data)) && $timeNow < $key)
             {
                 unset($data[$key]);
             }
