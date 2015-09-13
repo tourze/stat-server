@@ -1,19 +1,19 @@
 <?php
 
-namespace stat\Bootstrap;
+namespace tourze\StatServer\Bootstrap;
 
-use stat\StatServer;
 use tourze\Base\Base;
 use tourze\Base\Config;
 use tourze\Base\Helper\Arr;
 use tourze\Server\Worker;
+use tourze\StatServer\StatServer;
 use Workerman\Connection\ConnectionInterface;
 use Workerman\Lib\Timer;
 
 /**
  * Worker处理
  *
- * @package stat\Bootstrap
+ * @package tourze\StatServer\Bootstrap
  */
 class StatWorker extends Worker
 {

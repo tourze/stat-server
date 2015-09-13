@@ -1,14 +1,14 @@
 <?php
 
-namespace stat\Controller;
+namespace tourze\StatServer\Controller;
 
-use stat\Cache;
 use tourze\Base\Config;
+use tourze\StatServer\Cache;
 
 /**
  * 管理控制器
  *
- * @package stat\Controller
+ * @package tourze\StatServer\Controller
  */
 class AdminController extends BaseController
 {

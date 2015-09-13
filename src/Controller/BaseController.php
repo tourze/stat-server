@@ -1,6 +1,6 @@
 <?php
 
-namespace stat\Controller;
+namespace tourze\StatServer\Controller;
 
 use tourze\Base\Base;
 use tourze\Base\Config;
@@ -10,7 +10,7 @@ use tourze\View\View;
 /**
  * 基础的模板控制器
  *
- * @package stat\Controller
+ * @package tourze\StatServer\Controller
  */
 abstract class BaseController extends TemplateController
 {

@@ -1,6 +1,6 @@
 {
-  "name": "tourze/demo-stat",
-  "description": "数据手机和统计应用",
+  "name": "tourze/stat-server",
+  "description": "数据收集和统计，服务端",
   "authors": [
     {
       "name": "tourze",
@@ -16,9 +16,17 @@
     "tourze/html": "^1.0",
     "tourze/server": "^1.0"
   },
+  "require-dev": {
+    "phpunit/phpunit": "^4.7"
+  },
   "autoload": {
     "psr-4": {
-      "stat\\": "src/"
+      "tourze\\StatServer\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "tourze\\StatServer\\": "tests/"
     }
   },
   "repositories": [

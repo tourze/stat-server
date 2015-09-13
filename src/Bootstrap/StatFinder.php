@@ -1,6 +1,6 @@
 <?php
 
-namespace stat\Bootstrap;
+namespace tourze\StatServer\Bootstrap;
 
 use tourze\Base\Base;
 use tourze\Server\Worker;
@@ -9,7 +9,7 @@ use Workerman\Connection\ConnectionInterface;
 /**
  * Class StatFinder
  *
- * @package stat\Bootstrap
+ * @package tourze\StatServer\Bootstrap
  */
 class StatFinder extends Worker
 {

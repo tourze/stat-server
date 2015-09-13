@@ -1,6 +1,6 @@
 <?php
 
-namespace stat;
+namespace tourze\StatServer;
 
 use tourze\Base\Base;
 use tourze\Base\Config;

@@ -1,6 +1,6 @@
 <?php
 
-namespace stat;
+namespace tourze\StatServer;
 
 class Cache
 {

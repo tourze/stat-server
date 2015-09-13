@@ -1,16 +1,16 @@
 <?php
 
-namespace stat\Controller;
+namespace tourze\StatServer\Controller;
 
-use stat\StatServer as StatBase;
-use stat\Cache;
 use tourze\Base\Config;
+use tourze\StatServer\Cache;
+use tourze\StatServer\StatServer;
 use tourze\View\View;
 
 /**
  * 首页控制器
  *
- * @package stat\Controller
+ * @package tourze\StatServer\Controller
  */
 class MainController extends BaseController
 {
@@ -31,7 +31,7 @@ class MainController extends BaseController
         $interface = 'Statistics';
         $today = date('Y-m-d');
         $time_now = time();
-        StatBase::multiRequestStAndModules($module, $interface, $date);
+        StatServer::multiRequestStAndModules($module, $interface, $date);
         $allStr = '';
         if (is_array(Cache::$statDataCache['statistic']))
         {
@@ -42,7 +42,7 @@ class MainController extends BaseController
         }
 
         $codeMap = [];
-        $data = StatBase::formatStatLog($allStr, $date, $codeMap);
+        $data = StatServer::formatStatLog($allStr, $date, $codeMap);
         $successSeriesData = $failSeriesData = $successTimeSeriesData = $failTimeSeriesData = [];
         $totalCount = $fail_count = 0;
         foreach ($data as $time_point => $item)

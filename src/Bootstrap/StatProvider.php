@@ -1,17 +1,17 @@
 <?php
 
-namespace stat\Bootstrap;
+namespace tourze\StatServer\Bootstrap;
 
-use stat\StatServer;
 use tourze\Base\Config;
 use tourze\Base\Helper\Arr;
 use tourze\Server\Worker;
+use tourze\StatServer\StatServer;
 use Workerman\Connection\ConnectionInterface;
 
 /**
  * 数据提供者
  *
- * @package stat\Bootstrap
+ * @package tourze\StatServer\Bootstrap
  */
 class StatProvider extends Worker
 {

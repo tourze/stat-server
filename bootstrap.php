@@ -1,8 +1,8 @@
 <?php
 
-use stat\Cache;
 use tourze\Base\Config;
 use tourze\Route\Route;
+use tourze\StatServer\Cache;
 use tourze\View\View;
 
 require 'vendor/autoload.php';
@@ -25,7 +25,7 @@ View::addPath(ROOT_PATH . 'view' . DIRECTORY_SEPARATOR);
 Cache::$serverIpList = Config::load('statServer')->get('serverIpList');
 
 // 指定控制器命名空间
-Route::$defaultNamespace = '\\stat\\Controller\\';
+Route::$defaultNamespace = '\\tourze\\StatServer\\Controller\\';
 
 Route::set('stat-web', '(<controller>(/<action>(/<id>)))')
     ->defaults([
@@ -34,4 +34,4 @@ Route::set('stat-web', '(<controller>(/<action>(/<id>)))')
     ]);
 
 // 创建类别名
-@class_alias('\stat\Protocol\Statistic', '\Workerman\Protocols\Statistic');
+@class_alias('\tourze\StatServer\Protocol\Statistic', '\Workerman\Protocols\Statistic');

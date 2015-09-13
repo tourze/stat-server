@@ -1,18 +1,18 @@
 <?php
 
-namespace stat\Controller;
+namespace tourze\StatServer\Controller;
 
-use stat\StatServer;
-use stat\Cache;
 use tourze\Base\Base;
 use tourze\Base\Config;
 use tourze\Route\Route;
+use tourze\StatServer\Cache;
+use tourze\StatServer\StatServer;
 use tourze\View\View;
 
 /**
  * 日志查看控制器
  *
- * @package stat\Controller
+ * @package tourze\StatServer\Controller
  */
 class LoggerController extends BaseController
 {

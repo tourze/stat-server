@@ -41,17 +41,17 @@ return [
         // Provider
         'stat-provider' => [
             'socketName' => 'Text://0.0.0.0:55858',
-            'initClass'  => '\stat\Bootstrap\StatProvider',
+            'initClass'  => '\tourze\StatServer\Bootstrap\StatProvider',
         ],
         // Worker进程，接受用户提交请求
         'stat-worker'   => [
             'socketName' => 'Statistic://0.0.0.0:55656',
-            'initClass'  => '\stat\Bootstrap\StatWorker',
+            'initClass'  => '\tourze\StatServer\Bootstrap\StatWorker',
         ],
         // Finder 接收UDP广播，用于发现内网中其他其他的统计服务
         'stat-finder'   => [
             'socketName' => 'Text://0.0.0.0:55858',
-            'initClass'  => '\stat\Bootstrap\StatFinder',
+            'initClass'  => '\tourze\StatServer\Bootstrap\StatFinder',
         ],
     ],
 

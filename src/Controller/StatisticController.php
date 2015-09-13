@@ -1,17 +1,17 @@
 <?php
 
-namespace stat\Controller;
+namespace tourze\StatServer\Controller;
 
-use stat\StatServer as StatBase;
-use stat\Cache;
 use tourze\Base\Config;
 use tourze\Route\Route;
+use tourze\StatServer\Cache;
+use tourze\StatServer\StatServer;
 use tourze\View\View;
 
 /**
  * 监控控制器
  *
- * @package stat\Controller
+ * @package tourze\StatServer\Controller
  */
 class StatisticController extends BaseController
 {
@@ -32,7 +32,7 @@ class StatisticController extends BaseController
         $errorMsg = '';
         $today = date('Y-m-d');
         $time_now = time();
-        StatBase::multiRequestStAndModules($module, $interface, $date);
+        StatServer::multiRequestStAndModules($module, $interface, $date);
         $allStr = '';
         if (is_array(Cache::$statDataCache['statistic']))
         {
@@ -43,24 +43,24 @@ class StatisticController extends BaseController
         }
 
         $code_map = [];
-        $data = StatBase::formatStatLog($allStr, $date, $code_map);
+        $data = StatServer::formatStatLog($allStr, $date, $code_map);
         $interfaceName = "$module::$interface";
         $successSeriesData = $failSeriesData = $successTimeSeriesData = $failTimeSeriesData = [];
-        $total_count = $fail_count = 0;
-        foreach ($data as $time_point => $item)
+        $totalCount = $failCount = 0;
+        foreach ($data as $timePoint => $item)
         {
             if ($item['total_count'])
             {
-                $successSeriesData[] = "[" . ($time_point * 1000) . ",{$item['total_count']}]";
-                $total_count += $item['total_count'];
+                $successSeriesData[] = "[" . ($timePoint * 1000) . ",{$item['total_count']}]";
+                $totalCount += $item['total_count'];
             }
-            $failSeriesData[] = "[" . ($time_point * 1000) . ",{$item['fail_count']}]";
-            $fail_count += $item['fail_count'];
+            $failSeriesData[] = "[" . ($timePoint * 1000) . ",{$item['fail_count']}]";
+            $failCount += $item['fail_count'];
             if ($item['total_avg_time'])
             {
-                $successTimeSeriesData[] = "[" . ($time_point * 1000) . ",{$item['total_avg_time']}]";
+                $successTimeSeriesData[] = "[" . ($timePoint * 1000) . ",{$item['total_avg_time']}]";
             }
-            $failTimeSeriesData[] = "[" . ($time_point * 1000) . ",{$item['fail_avg_time']}]";
+            $failTimeSeriesData[] = "[" . ($timePoint * 1000) . ",{$item['fail_avg_time']}]";
         }
         $successSeriesData = implode(',', $successSeriesData);
         $failSeriesData = implode(',', $failSeriesData);
