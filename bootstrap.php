@@ -5,9 +5,9 @@ use tourze\Route\Route;
 use tourze\StatServer\Cache;
 use tourze\View\View;
 
-if (is_file(__DIR__ . 'vendor/autoload.php'))
+if (is_file(__DIR__ . '/vendor/autoload.php'))
 {
-    require_once 'vendor/autoload.php';
+    require_once __DIR__ . '/vendor/autoload.php';
 }
 
 ini_set('display_errors', 'on');
